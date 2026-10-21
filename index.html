@@ -3,31 +3,108 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>about</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <title>jeslyn.fyi</title>
+  <link rel="stylesheet" href="styles.css?v=2" />
+  <link rel="stylesheet" href="library/library.css?v=2" />
 </head>
 <body>
   <div class="site">
-    <header class="masthead">
-      <a class="brand" href="index.html">jeslyn</a>
-      <nav class="nav">
-        <a href="index.html" class="active">about</a>
-        <a href="things-i-like.html">things i like</a>
-        <a href="read-a-book.html">read a book</a>
-      </nav>
-    </header>
+    <main class="lib">
+      <header class="lib-hero">
+        <p class="lib-kicker">jeslyn's digital library</p>
+        <h1 class="lib-heading" id="libHeading">read something hand&#8209;typed today</h1>
+        <p class="lib-sub">i know you haven't read a book since high school <span class="lib-keep">AP</span> literature.</p>
+        <button class="lib-btn" id="libRecommend" type="button">recommend a book</button>
+        <input class="lib-search" id="libSearch" type="search" placeholder="what are you looking for?" aria-label="search the shelf" />
+        <div class="lib-filters" id="libKinds" role="group" aria-label="books or cds" hidden></div>
+        <div class="lib-filters" id="libFilters" role="group" aria-label="filter by genre"></div>
+      </header>
 
-    <main>
-      <div class="prose">
-        <p>hi, i'm jeslyn!</p>
-        <p>i'm a third year doubling in data science and linguistics at uc berkeley. in my free time i drink a lot of heytea, 
-            and pretend to read a lot of books :D</p>
-      </div>
+      <p class="lib-now" id="libNow" aria-live="polite"></p>
+      <div class="lib-shelf" id="shelfRead" aria-label="my shelf"></div>
+
+      <section class="lib-section" id="toReadSection" hidden>
+        <p class="lib-kicker">up next</p>
+        <h2 class="lib-heading lib-heading--small">the to-read shelf</h2>
+        <p class="lib-count" id="toReadCount"></p>
+        <div class="lib-shelf" id="shelfToRead" aria-label="up next"></div>
+      </section>
+
+      <p class="lib-empty" id="libEmpty" hidden>no books match that</p>
     </main>
-
   </div>
+
+  <div class="lib-overlay" id="overlay" hidden>
+    <div class="lib-open" role="dialog" aria-modal="true" aria-labelledby="libTitle">
+      <div class="lib-art" id="libArt">
+        <span class="lib-disc" aria-hidden="true"></span>
+        <div class="lib-cover" id="libCover">
+          <img id="libCoverImg" alt="" />
+          <span class="lib-cover-title" id="libCoverTitle"></span>
+        </div>
+      </div>
+      <div class="lib-card">
+        <button class="lib-close" id="libClose" type="button">close</button>
+        <div class="lib-head" id="libStatus"></div>
+        <h2 class="lib-title" id="libTitle"></h2>
+        <p class="lib-author" id="libAuthor"></p>
+        <p class="lib-quote" id="libQuote"></p>
+        <dl class="lib-meta" id="libMeta"></dl>
+        <div class="lib-detail" id="libDetail"></div>
+        <div class="lib-nav">
+          <button type="button" id="libPrev">&larr; previous</button>
+          <button type="button" id="libNext">next &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-overlay" id="recOverlay" hidden>
+    <form class="rec" id="recForm" role="dialog" aria-modal="true" aria-labelledby="recHeading" novalidate>
+      <button class="lib-close" id="recClose" type="button">close</button>
+      <p class="lib-kicker">recommend a book</p>
+      <h2 class="rec-heading" id="recHeading">what should i read next?</h2>
+
+      <div id="recPick">
+        <input class="rec-input" id="recQuery" type="search" placeholder="search by title or author" autocomplete="off" aria-label="search for a book" />
+        <p class="rec-hint" id="recHint" aria-live="polite"></p>
+        <ul class="rec-results" id="recResults"></ul>
+        <button class="rec-link" id="recManual" type="button">can't find it? type it in</button>
+      </div>
+
+      <div id="recWrite" hidden>
+        <div class="rec-book">
+          <span class="rec-thumb" id="recThumb"><img id="recThumbImg" alt="" hidden /></span>
+          <div class="rec-book-text" id="recPicked">
+            <p class="rec-book-title" id="recBookTitle"></p>
+            <p class="rec-book-by" id="recBookBy"></p>
+          </div>
+          <div class="rec-book-text" id="recTyped" hidden>
+            <input class="rec-input" id="recTitle" placeholder="title" aria-label="title" />
+            <input class="rec-input" id="recAuthor" placeholder="author (optional)" aria-label="author" />
+          </div>
+        </div>
+        <label class="rec-label" for="recName">your name</label>
+        <input class="rec-input" id="recName" placeholder="who's recommending this?" maxlength="80" />
+        <label class="rec-label" for="recWhy">why should i read it?</label>
+        <textarea class="rec-input rec-why" id="recWhy" rows="3" placeholder="optional, a line or two" maxlength="2000"></textarea>
+        <input type="checkbox" class="rec-trap" id="recTrap" tabindex="-1" autocomplete="off" aria-hidden="true" />
+        <p class="rec-status" id="recStatus" aria-live="polite"></p>
+        <div class="rec-actions">
+          <button class="rec-link" id="recBack" type="button">&larr; another book</button>
+          <button class="lib-btn rec-send" id="recSend" type="submit">send it</button>
+        </div>
+      </div>
+
+      <div id="recDone" hidden>
+        <p class="rec-done">sent! thank you &hearts;</p>
+        <button class="rec-link" id="recAgain" type="button">recommend another</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="library/shelf.js?v=2"></script>
+  <script src="library/library.js?v=2"></script>
+  <script src="library/recommend.js?v=2"></script>
 </body>
 </html>

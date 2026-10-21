@@ -1,0 +1,539 @@
+/* digital library bookshelf (digital-library.html) */
+.lib, .lib-overlay { --paper: #faf6ec; --wood: #e3d9cc; --wood-dark: #cbbcab; }
+.lib-locked { overflow: hidden; }
+
+/* hero */
+.lib-hero { text-align: center; margin-bottom: 1.5rem; }
+.lib-kicker { font-size: 0.72rem; letter-spacing: 0.3em; color: var(--accent); margin-bottom: 0.9rem; }
+.lib-heading {
+  font-size: clamp(1.7rem, 5vw, 2.8rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  max-width: 18em;
+  margin: 0 auto;
+  display: grid;
+}
+.lib-heading > span { grid-area: 1 / 1; }
+.lib-ghost { visibility: hidden; }
+.lib-keep { text-transform: none; }
+.lib-typed::after { content: ""; display: inline-block; width: 2px; height: 0.9em; margin-left: 4px; background: var(--accent); vertical-align: -0.08em; animation: lib-caret 1s steps(1) infinite; }
+.lib-heading--small { font-size: clamp(1.4rem, 3.5vw, 1.9rem); min-height: 0; }
+.lib-heading--small::after { display: none; }
+@keyframes lib-caret { 50% { opacity: 0; } }
+.lib-sub { margin-top: 0.6rem; color: rgba(0, 0, 0, 0.6); }
+.lib-count { margin-top: 0.9rem; font-size: 0.72rem; letter-spacing: 0.3em; color: var(--accent); }
+.lib-btn {
+  display: inline-block;
+  background: none;
+  font-family: inherit;
+  text-transform: lowercase;
+  cursor: pointer;
+  margin-top: 1.1rem;
+  padding: 0.45rem 1.2rem;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+.lib-btn:hover { color: var(--accent); border-color: var(--accent); }
+.lib-btn[hidden] { display: none; }
+.lib-search {
+  display: block;
+  width: min(100%, 26rem);
+  margin: 1.8rem auto 0;
+  padding: 0.5rem 0;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  background: transparent;
+  font: inherit;
+  text-align: center;
+  text-transform: lowercase;
+  color: var(--ink);
+  outline: none;
+}
+.lib-search:focus { border-bottom-color: var(--accent); }
+.lib-search::placeholder { color: rgba(0, 0, 0, 0.4); }
+.lib-filters { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-top: 1.1rem; }
+.lib-chip {
+  padding: 0.25rem 0.85rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  text-transform: lowercase;
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+.lib-chip:hover { color: var(--accent); border-color: var(--accent); }
+.lib-chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+
+.lib-now { text-align: center; font-size: 0.9rem; font-style: italic; color: var(--accent); min-height: 3em; margin: 1.5rem auto 1.5rem; max-width: 40em; }
+
+/* shelf: each row is --row tall, then a plank (--board) and its shadow on the wall (--shade),
+   drawn by the repeating background. --row is where the books stand. */
+.lib-shelf {
+  --row: 250px;
+  --board: 16px;
+  --shade: 16px;
+  --tile: calc(var(--row) + var(--board) + var(--shade));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: calc(var(--board) + var(--shade));
+  column-gap: 3px;
+  margin-inline: calc(50% - min(50vw - 1rem, 600px));
+  padding: 0 clamp(0.5rem, 3vw, 2rem) calc(var(--board) + var(--shade));
+  background: linear-gradient(to bottom,
+      transparent calc(var(--row) - 6px),
+      #f1e9de calc(var(--row) - 6px), #e6dccd calc(var(--row) + 2px),
+      #d8c9b6 calc(var(--row) + 2px), #c4b29c var(--row-end),
+      rgba(80, 55, 30, 0.2) var(--row-end), transparent var(--tile))
+    0 0 / 100% var(--tile) repeat-y;
+  --row-end: calc(var(--row) + var(--board));
+}
+.lib-shelf[hidden] { display: none; }
+
+/* a book on the shelf */
+.bk {
+  position: relative;
+  height: var(--row);
+  display: flex;
+  align-items: flex-end;
+  margin-right: var(--gap, 0px);
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  text-transform: lowercase;
+  perspective: 1400px;
+  perspective-origin: 50% 20%;
+}
+.bk[hidden] { display: none; }
+.bk:hover, .bk:focus-visible { z-index: 2; }
+.bk::after, .cd::after {
+  content: "";
+  position: absolute;
+  left: -15%;
+  right: -15%;
+  bottom: -4px;
+  height: 9px;
+  background: radial-gradient(ellipse at center, rgba(40, 25, 10, 0.32), transparent 70%);
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.bk:hover::after, .cd:hover::after { opacity: 0.45; }
+/* each item is its own little 3d scene (so whatever you hover is drawn on top of its neighbours).
+   the moving 3d parts ignore the mouse, so hover stays tied to the book's spot on the shelf */
+.bk-3d, .cd-case { pointer-events: none; }
+.bk-3d {
+  position: relative;
+  display: block;
+  width: var(--w);
+  height: var(--h);
+  transform-style: preserve-3d;
+  transform-origin: bottom center;
+  transform: rotateY(var(--ry, 0deg)) rotateZ(var(--rz, 0deg));
+  transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.bk:hover .bk-3d, .bk:focus-visible .bk-3d { transform: translateY(-16px) translateZ(24px) rotateY(-16deg) rotateZ(1.5deg); }
+.bk-spine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--c);
+  color: #faf7f0;
+  box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.5);
+}
+.bk-spine img { position: absolute; top: 0; left: 0; height: 100%; width: auto; max-width: none; opacity: 0.7; pointer-events: none; }
+.bk-spine::before { content: ""; position: absolute; inset: 0; background: var(--c); opacity: 0.62; }
+/* light across a rounded spine, a warm top edge, and a dark foot */
+.bk-spine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(255, 246, 224, 0.22), transparent 14%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.16), transparent 8%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.06) 16%, rgba(255, 255, 255, 0.34) 38%, rgba(255, 255, 255, 0.1) 52%, rgba(0, 0, 0, 0.14) 78%, rgba(0, 0, 0, 0.36) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16), inset 0 2px 3px rgba(0, 0, 0, 0.18);
+}
+.bk-band { position: absolute; left: 3px; right: 3px; top: 10px; height: 1px; background: currentColor; opacity: 0.35; }
+.bk-band--low { top: auto; bottom: 62px; }
+.bk-title, .bk-author {
+  position: absolute;
+  left: 0;
+  right: 0;
+  writing-mode: vertical-rl;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+.bk-title { top: 18px; bottom: 70px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em; text-overflow: ellipsis; }
+.bk-author { bottom: 8px; height: 50px; font-size: 9px; opacity: 0.85; }
+/* the front cover, hinged on the spine's right edge and facing right */
+.bk-cover {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  width: var(--d);
+  height: 100%;
+  overflow: hidden;
+  border-radius: 0 2px 2px 0;
+  background: var(--c);
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  backface-visibility: hidden;
+}
+.bk-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bk-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.34) 70%, rgba(0, 0, 0, 0.5)); }
+/* page tops, running back from the top of the spine */
+.bk-top {
+  position: absolute;
+  top: 0;
+  left: 1px;
+  right: 1px;
+  height: var(--d);
+  transform-origin: top center;
+  transform: rotateX(-90deg);
+  background: repeating-linear-gradient(to right, #f2ede2 0 1px, #ddd3c1 1px 2px);
+}
+.bk:focus-visible { outline: none; }
+.bk:focus-visible .bk-spine { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* bookmark ribbon for "reading" */
+.bk--reading .bk-3d::after { content: ""; position: absolute; top: -10px; right: 5px; width: 6px; height: 26px; background: var(--accent); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); }
+
+/* a cd standing spine-out on the shelf, as a 3d jewel case. hovering turns the spine away and the
+   cover swings out to face you, with the disc sliding up out of it. the cover is its own flat layer
+   so it always draws on top of the books next to it. */
+.cd {
+  position: relative;
+  height: var(--row);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  text-transform: lowercase;
+  perspective: 1400px;
+  perspective-origin: 50% 20%;
+}
+.cd[hidden] { display: none; }
+.cd:hover, .cd:focus-visible { z-index: 3; }
+.cd-case {
+  position: relative;
+  display: block;
+  width: var(--sp, 18px);
+  height: var(--cd, 124px);
+  transform-style: preserve-3d;
+  transform-origin: bottom center;
+  transform: rotateY(var(--ry, 0deg)) rotateZ(var(--lean, 0deg));
+  transition: transform 0.45s ease, opacity 0.3s ease;
+}
+.cd:hover .cd-case, .cd:focus-visible .cd-case { transform: rotateY(-90deg); opacity: 0; }
+.cd-pop {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: var(--cd, 124px);
+  height: var(--cd, 124px);
+  margin-left: calc(var(--cd, 124px) / -2);
+  pointer-events: none;
+  opacity: 0;
+  transform-origin: left center;
+  transform: perspective(700px) translateX(calc(var(--cd, 124px) / 2)) rotateY(88deg);
+  transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.2s ease;
+}
+.cd:hover .cd-pop, .cd:focus-visible .cd-pop { opacity: 1; transform: translateY(-14px); }
+.cd-spine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 1px;
+  background: var(--c);
+  color: #faf7f0;
+  box-shadow: 0 10px 20px -14px rgba(0, 0, 0, 0.55);
+}
+.cd-spine img { position: absolute; top: 0; left: 50%; height: 100%; width: auto; max-width: none; transform: translateX(-50%); opacity: 0.6; filter: blur(1px) saturate(1.2); }
+.cd-spine::before { content: ""; position: absolute; inset: 0; background: var(--c); opacity: 0.5; }
+/* clear plastic: dark hinge edges and a shine down the middle */
+.cd-spine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.55), rgba(255, 255, 255, 0.08) 22%, rgba(255, 255, 255, 0.45) 45%, rgba(255, 255, 255, 0.1) 60%, rgba(0, 0, 0, 0.5));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+.cd-name {
+  position: absolute;
+  inset: 6px 0;
+  writing-mode: vertical-rl;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+}
+.cd-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--cd, 124px);
+  transform-origin: top center;
+  transform: rotateX(-90deg);
+  background: linear-gradient(to bottom, rgba(235, 238, 242, 0.95), rgba(190, 196, 204, 0.95));
+}
+.cd-disc, .lib-disc {
+  position: absolute;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--bg) 0 7%, rgba(0, 0, 0, 0.2) 7.5% 9%, rgba(255, 255, 255, 0.55) 9.5% 15%, transparent 15.5% 31%, rgba(255, 255, 255, 0.5) 31.5% 32.5%, transparent 33%),
+    conic-gradient(from 20deg, #d8d8df, #f3e6f2, #cfe4ea, #ece8cc, #f4d6e4, #d2dbec, #e6e6e6, #d8d8df);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+.cd-disc {
+  left: 6%;
+  top: 6%;
+  width: 88%;
+  transition: transform 0.5s ease 0.2s;
+}
+.cd:hover .cd-disc, .cd:focus-visible .cd-disc { transform: translateY(-42%) rotate(60deg); }
+.cd-front {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--c);
+  box-shadow: 0 16px 28px -16px rgba(0, 0, 0, 0.6);
+}
+.cd-front img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* hinge on the left, gloss on the plastic */
+.cd-front::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 9%;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.45), rgba(255, 255, 255, 0.18) 55%, rgba(0, 0, 0, 0.25));
+}
+.cd-front::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+  background: linear-gradient(130deg, rgba(255, 255, 255, 0.38), transparent 38%, transparent 72%, rgba(255, 255, 255, 0.12));
+}
+.cd-plain {
+  position: absolute;
+  inset: auto 10px 10px 18px;
+  color: #faf7f0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+}
+.cd.has-art .cd-plain { display: none; }
+/* "listening" gets a ribbon, like the bookmark on books */
+.cd--playing .cd-case::after { content: ""; position: absolute; top: -9px; left: 50%; width: 6px; height: 22px; margin-left: -3px; background: var(--accent); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); transition: opacity 0.2s; }
+.cd--playing:hover .cd-case::after { opacity: 0; }
+.cd:focus-visible { outline: none; }
+.cd:focus-visible .cd-front { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* open cd: square case with the disc sliding out to the right */
+.lib-art { position: relative; width: 100%; }
+.lib-art .lib-cover { z-index: 1; }
+.lib-disc { display: none; }
+.lib-art--cd .lib-cover { aspect-ratio: 1; border-radius: 3px; }
+.lib-art--cd .lib-disc {
+  display: block;
+  z-index: 0;
+  top: 4%;
+  right: 4%;
+  width: 92%;
+  animation: lib-slide 0.6s ease 0.15s both;
+}
+.lib-art--playing .lib-disc { animation: lib-slide 0.6s ease 0.15s both, lib-spin 6s linear 0.75s infinite; }
+@keyframes lib-slide { from { transform: translateX(0); } to { transform: translateX(26%); } }
+@keyframes lib-spin { from { transform: translateX(26%) rotate(0); } to { transform: translateX(26%) rotate(360deg); } }
+
+.lib-section { margin-top: 4rem; text-align: center; }
+.lib-section .lib-shelf { margin-top: 1.5rem; text-align: left; }
+.lib-empty { text-align: center; color: rgba(0, 0, 0, 0.5); padding: 3rem 0; }
+
+/* open book */
+.lib-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(244, 243, 238, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: lib-fade 0.25s ease;
+}
+.lib-overlay[hidden] { display: none; }
+@keyframes lib-fade { from { opacity: 0; } }
+.lib-open {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 400px);
+  gap: 4.5rem;
+  align-items: center;
+  max-height: 100%;
+  animation: lib-rise 0.35s ease;
+}
+@keyframes lib-rise { from { transform: translateY(14px); opacity: 0; } }
+.lib-cover {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: 3px 8px 8px 3px;
+  overflow: hidden;
+  background: var(--c, var(--accent));
+  box-shadow: inset 6px 0 8px -4px rgba(0, 0, 0, 0.35), 0 30px 60px -25px rgba(0, 0, 0, 0.55);
+}
+.lib-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lib-cover::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 14px; background: linear-gradient(to right, rgba(0, 0, 0, 0.25), transparent); }
+.lib-cover-title { display: none; }
+.lib-cover--plain .lib-cover-title { display: flex; position: absolute; inset: auto 1.2rem 1.4rem; color: #ffffff; font-size: 1.4rem; font-weight: 600; line-height: 1.2; }
+.lib-card {
+  position: relative;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  padding: 1.5rem 1.6rem 1.4rem;
+  background: var(--paper);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+}
+.lib-close { position: absolute; top: 0.9rem; right: 1rem; border: none; background: none; font: inherit; font-size: 0.8rem; text-transform: lowercase; color: rgba(0, 0, 0, 0.45); cursor: pointer; }
+.lib-close:hover { color: var(--accent); }
+.lib-head { font-size: 0.72rem; letter-spacing: 0.18em; color: var(--accent); border-bottom: 1.5px solid var(--accent); padding-bottom: 0.5rem; margin-bottom: 0.9rem; }
+.lib-title { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+.lib-author { color: var(--accent); margin-bottom: 0.8rem; }
+.lib-quote { font-style: italic; font-size: 0.95rem; color: rgba(0, 0, 0, 0.7); margin-bottom: 0.8rem; }
+.lib-quote[hidden] { display: none; }
+.lib-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.45rem 0; border-bottom: 1px dashed rgba(0, 0, 0, 0.15); font-size: 0.9rem; }
+.lib-row dt { color: rgba(0, 0, 0, 0.5); }
+.lib-row dd { text-align: right; font-weight: 500; }
+.lib-detail { margin-top: 1.1rem; border-top: 1.5px solid var(--accent); padding-top: 0.9rem; }
+.lib-detail[hidden] { display: none; }
+.lib-detail h4 { font-size: 0.72rem; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 0.3rem; }
+.lib-detail p { font-size: 0.92rem; color: rgba(0, 0, 0, 0.78); margin-bottom: 0.9rem; }
+.lib-detail p:last-child { margin-bottom: 0; }
+.lib-nav { display: flex; justify-content: space-between; margin-top: 1.2rem; }
+.lib-nav button { border: none; background: none; font: inherit; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: lowercase; color: var(--accent); cursor: pointer; }
+.lib-nav button:disabled { visibility: hidden; }
+.lib-nav button:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 700px) {
+  .lib-shelf { --row: 210px; --cd: 100px; --sp: 16px; }
+  .lib-overlay { align-items: flex-start; overflow-y: auto; }
+  .lib-open { grid-template-columns: 1fr; gap: 1.2rem; justify-items: center; max-height: none; }
+  .lib-art { width: 150px; }
+  .lib-art--cd { margin-right: 40px; }
+  .lib-card { max-height: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bk-3d, .cd-case, .cd-pop, .cd-disc, .lib-overlay, .lib-open, .rec { transition: none; animation: none; }
+  .lib-art--cd .lib-disc { animation: none; transform: translateX(26%); }
+  .lib-heading::after { display: none; }
+}
+
+/* recommend a book */
+.rec {
+  position: relative;
+  width: min(100%, 34rem);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 2rem clamp(1.2rem, 5vw, 2.2rem) 1.8rem;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.35);
+  text-align: left;
+  animation: lib-rise 0.35s ease;
+}
+.rec [hidden] { display: none; }
+.rec-heading { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 1.4rem; }
+.rec-input {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.1rem;
+  border: none;
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.2);
+  background: none;
+  font: inherit;
+  color: inherit;
+  outline: none;
+  resize: vertical;
+}
+.rec-input:focus { border-bottom-color: var(--accent); }
+.rec-input::placeholder { color: rgba(0, 0, 0, 0.38); }
+.rec-label { display: block; margin-top: 1.3rem; font-size: 0.72rem; letter-spacing: 0.2em; color: var(--accent); }
+.rec-hint { min-height: 1.4em; margin-top: 0.6rem; font-size: 0.85rem; color: rgba(0, 0, 0, 0.5); }
+.rec-results { list-style: none; max-height: 18rem; overflow-y: auto; margin: 0 -0.5rem; }
+.rec-result {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  text-transform: lowercase;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+.rec-result:hover, .rec-result:focus-visible { background: rgba(91, 42, 85, 0.08); outline: none; }
+.rec-result > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.rec-thumb {
+  flex: none;
+  display: block;
+  width: 64px;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--bg);
+  box-shadow: inset 3px 0 4px -2px rgba(0, 0, 0, 0.3), 0 8px 16px -10px rgba(0, 0, 0, 0.5);
+}
+.rec-thumb--small { width: 34px; }
+.rec-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rec-book { display: flex; align-items: center; gap: 1.1rem; margin-bottom: 0.4rem; }
+.rec-book-text { flex: 1; min-width: 0; }
+.rec-book-title { display: block; font-weight: 600; line-height: 1.3; }
+.rec-book-by { display: block; font-size: 0.85rem; color: rgba(0, 0, 0, 0.55); }
+.rec-why { min-height: 4.5rem; }
+.rec-trap { position: absolute; left: -9999px; }
+.rec-status { min-height: 1.4em; margin-top: 0.9rem; font-size: 0.85rem; color: var(--accent); }
+.rec-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem; }
+.rec-link { border: none; background: none; padding: 0; margin-top: 0.8rem; font: inherit; font-size: 0.85rem; text-transform: lowercase; color: var(--accent); cursor: pointer; }
+.rec-link:hover { text-decoration: underline; }
+.rec-actions .rec-link, .rec-send { margin-top: 0; }
+.rec-send { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+.rec-send:hover { color: #ffffff; opacity: 0.88; }
+.rec-send:disabled { opacity: 0.5; cursor: default; }
+.rec-done { font-size: 1.1rem; font-weight: 600; color: var(--accent); }
