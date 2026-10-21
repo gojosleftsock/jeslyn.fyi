@@ -1,9 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Caveat:wght@500;600&display=swap");
 
 :root {
-  --bg: #f4f3ee;
-  --ink: #000000;
-  --accent: #5b2a55;
+  --bg: #b8ac99; /* the wall colour in library/photo/room.jpg */
+  --ink: #1e211a;
+  --accent: #435a2b;
 }
 
 * {
@@ -98,7 +98,7 @@ body {
 
 .card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(91, 42, 85, 0.12);
+  box-shadow: 0 8px 20px rgba(45, 55, 30, 0.12);
 }
 
 .card h3 {
@@ -201,7 +201,7 @@ body {
 }
 
 .card--3d:hover {
-  box-shadow: 0 18px 40px rgba(91, 42, 85, 0.25);
+  box-shadow: 0 18px 40px rgba(45, 55, 30, 0.25);
 }
 
 /* generic pop-up modal (things i like) */
@@ -302,3 +302,8 @@ body {
     font-size: 1.8rem;
   }
 }
+
+/* the cursor is a small moss-green dot everywhere (text fields keep the typing caret) */
+:root { --dot: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'><circle cx='11' cy='11' r='10' fill='%23435a2b'/></svg>") 11 11, auto; }
+*, *::before, *::after { cursor: var(--dot) !important; }
+input[type="search"], input[type="text"], input[type="email"], textarea { cursor: text !important; }

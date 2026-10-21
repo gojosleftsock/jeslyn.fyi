@@ -4,35 +4,49 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>jeslyn.fyi</title>
-  <link rel="stylesheet" href="styles.css?v=2" />
-  <link rel="stylesheet" href="library/library.css?v=2" />
+  <link rel="stylesheet" href="styles.css?v=41" />
+  <link rel="stylesheet" href="library/library.css?v=41" />
 </head>
 <body>
-  <div class="site">
-    <main class="lib">
+  <header class="lib-bar">
+    <p class="lib-kicker">jeslyn nguyen</p>
+    <div class="lib-bar-btns">
+      <button class="lib-btn" id="libRecommend" type="button">give me a rec!</button>
+      <button class="lib-btn" id="libAbout" type="button">about</button>
+    </div>
+  </header>
+  <main class="lib">
+    <div class="site lib-top">
       <header class="lib-hero">
-        <p class="lib-kicker">jeslyn's digital library</p>
-        <h1 class="lib-heading" id="libHeading">read something hand&#8209;typed today</h1>
-        <p class="lib-sub">i know you haven't read a book since high school <span class="lib-keep">AP</span> literature.</p>
-        <button class="lib-btn" id="libRecommend" type="button">recommend a book</button>
+        <h1 class="lib-heading" id="libHeading">for your information,</h1>
         <input class="lib-search" id="libSearch" type="search" placeholder="what are you looking for?" aria-label="search the shelf" />
         <div class="lib-filters" id="libKinds" role="group" aria-label="books or cds" hidden></div>
-        <div class="lib-filters" id="libFilters" role="group" aria-label="filter by genre"></div>
       </header>
 
       <p class="lib-now" id="libNow" aria-live="polite"></p>
-      <div class="lib-shelf" id="shelfRead" aria-label="my shelf"></div>
+    </div>
 
+    <div class="scene" id="scene">
+      <div class="scene-track">
+        <div class="lib-shelf" id="shelfRead" aria-label="my shelf"></div>
+      </div>
+    </div>
+
+    <div class="site lib-rest">
       <section class="lib-section" id="toReadSection" hidden>
         <p class="lib-kicker">up next</p>
         <h2 class="lib-heading lib-heading--small">the to-read shelf</h2>
         <p class="lib-count" id="toReadCount"></p>
-        <div class="lib-shelf" id="shelfToRead" aria-label="up next"></div>
+        <div class="scene scene--queue">
+          <div class="scene-track">
+            <div class="lib-shelf" id="shelfToRead" aria-label="up next"></div>
+          </div>
+        </div>
       </section>
 
       <p class="lib-empty" id="libEmpty" hidden>no books match that</p>
-    </main>
-  </div>
+    </div>
+  </main>
 
   <div class="lib-overlay" id="overlay" hidden>
     <div class="lib-open" role="dialog" aria-modal="true" aria-labelledby="libTitle">
@@ -56,6 +70,15 @@
           <button type="button" id="libNext">next &rarr;</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="lib-overlay" id="aboutOverlay" hidden>
+    <div class="rec about" role="dialog" aria-modal="true" aria-labelledby="aboutHeading">
+      <button class="lib-close" id="aboutClose" type="button">close</button>
+      <p class="lib-kicker">fyi</p>
+      <h2 class="rec-heading" id="aboutHeading"></h2>
+      <div class="about-text" id="aboutText"></div>
     </div>
   </div>
 
@@ -103,8 +126,8 @@
     </form>
   </div>
 
-  <script src="library/shelf.js?v=2"></script>
-  <script src="library/library.js?v=2"></script>
-  <script src="library/recommend.js?v=2"></script>
+  <script src="library/shelf.js?v=41"></script>
+  <script src="library/library.js?v=41"></script>
+  <script src="library/recommend.js?v=41"></script>
 </body>
 </html>

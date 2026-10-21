@@ -16,11 +16,28 @@ window.LIBRARY = {
   // where the "recommend a book" button sends things:
   //   web3formsKey -> a free key from web3forms.com. recommendations get emailed to you and visitors stay on the page
   //   email        -> used when there's no key: "send it" opens the visitor's email app, addressed to you
-  recommendTo: { web3formsKey: "", email: "" },
+  recommendTo: { web3formsKey: "", email: "jesnguyen910@gmail.com" },
+
+  // the about-me card that opens when you click the bookend at the left end of the shelf.
+  // each string in text is its own paragraph.
+  // use [text](url) in text to make a link; links with an empty href are hidden.
+  about: {
+    heading: "hi, i'm jeslyn",
+    text: [
+      "a junior studying data science & linguistics @ uc berkeley. i like acronyms, idioms, heytea cloud jasmine, and [math tournaments](https://berkeley.mt).",
+    ],
+    links: [
+      { label: "github", href: "https://github.com/gojosleftsock" },
+      { label: "linkedin", href: "https://www.linkedin.com/in/jeslyn-nguyen/" },
+      { label: "instagram", href: "https://www.instagram.com/jeslynnguyen_/" },
+    ],
+  },
 
   shelf: [
     {
       title: "brave new world",
+      spine: "library/photo/spines/brave-new-world.jpg",
+      height: 18,
       author: "aldous huxley",
       status: "read",
       genre: "dystopian fiction",
@@ -45,6 +62,8 @@ window.LIBRARY = {
     },
     {
       title: "lolita",
+      spine: "library/photo/spines/lolita.jpg",
+      height: 19.5,
       author: "vladimir nabokov",
       status: "read",
       genre: "literary fiction",
@@ -57,6 +76,8 @@ window.LIBRARY = {
     },
     {
       title: "crime and punishment",
+      spine: "library/photo/spines/crime-and-punishment.jpg",
+      height: 21.5,
       author: "fyodor dostoevsky",
       status: "read",
       genre: "psychological fiction",

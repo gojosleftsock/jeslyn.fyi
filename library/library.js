@@ -1,9 +1,9 @@
 // draws the shelf from library/shelf.js. you shouldn't need to edit this file to add books or cds.
 (() => {
-  const { shelf, books = [] } = window.LIBRARY || {};
+  const { shelf, books = [], about } = window.LIBRARY || {};
   const items = shelf || books;
   const $ = (id) => document.getElementById(id);
-  const COLORS = ["#5b2a55", "#2f3e46", "#7a4b3a", "#3d5a40", "#8a6d3b", "#4a4e69", "#6b2d2d", "#1f3b4d", "#9c6b7a", "#3a3a3a"];
+  const COLORS = ["#3d5226", "#5a7340", "#2b3a1a", "#6b6a4f", "#8a7f68", "#4a5a3a", "#2f3328", "#7a8a5e", "#5c5144", "#1e211a"];
   const STATUS = {
     read: "finished", reading: "reading now", "to-read": "to read",
     listened: "in my collection", listening: "on repeat", "to-listen": "to listen",
@@ -64,37 +64,69 @@
   }
 
   // ---------- shelves ----------
-  // books are little css 3d boxes: a spine facing you, a cover face behind it, and the page tops.
-  // a few are turned so you can see their cover.
-  const sin = (deg) => Math.sin((Math.abs(deg) * Math.PI) / 180);
+  // sizes are in centimetres. books use a photo of their spine if they have one (spine: in shelf.js),
+  // otherwise they get a cloth-bound spine in their colour.
   function makeBook(b, h) {
     const el = document.createElement("button");
     el.className = "bk" + (status(b) === "reading" ? " bk--reading" : "");
-    const height = 190 + (h % 50);
-    const depth = Math.round(height * 0.66);
-    const ry = h % 6 === 0 ? -(20 + (h % 9)) : (h % 31) / 10 - 1.5;
-    el.style.setProperty("--w", `${Math.round(Math.min(48, Math.max(22, (b.pages || 300) / 12)))}px`);
-    el.style.setProperty("--h", `${height}px`);
-    el.style.setProperty("--d", `${depth}px`);
-    el.style.setProperty("--ry", `${ry.toFixed(2)}deg`);
-    el.style.setProperty("--gap", `${Math.round(depth * sin(ry) * 0.9)}px`);
-    if (h % 7 === 0) el.style.setProperty("--rz", h % 2 ? "1.5deg" : "-1.5deg");
-    el.innerHTML = '<span class="bk-3d"><span class="bk-spine"><img alt="" draggable="false" hidden /><span class="bk-band"></span><span class="bk-band bk-band--low"></span><span class="bk-title"></span><span class="bk-author"></span></span><span class="bk-cover"><img alt="" draggable="false" hidden /></span><span class="bk-top"></span></span>';
+    const tall = b.height || 18 + (h % 50) / 10;
+    el.style.setProperty("--h", tall);
+    el.style.setProperty("--w", Math.min(5, Math.max(1.6, (b.pages || 300) * 0.0065 + 0.4)).toFixed(2));
+    if (h % 5 === 0) el.style.setProperty("--lean", h % 2 ? "1.2deg" : "-1.2deg");
+    el.innerHTML = '<span class="bk-body"><span class="bk-cloth"><span class="bk-title"></span><span class="bk-author"></span></span><img class="bk-photo" alt="" draggable="false" hidden /></span>'
+      + (status(b) === "reading" ? '<span class="bk-ribbon"></span>' : "");
     el.querySelector(".bk-title").textContent = b.title;
     el.querySelector(".bk-author").textContent = by(b).split(" ").pop();
+    if (b.spine) {
+      const img = el.querySelector(".bk-photo");
+      img.onload = () => {
+        img.hidden = false;
+        el.classList.add("has-photo");
+        el.style.setProperty("--w", ((tall * img.naturalWidth) / img.naturalHeight).toFixed(2));
+      };
+      img.src = b.spine;
+    }
     return el;
   }
 
-  // cds stand spine-out like the books; hovering swings the case round to show the cover
+  // cds stand spine-out like the books
   function makeCd(c, h) {
     const el = document.createElement("button");
     el.className = "cd" + (status(c) === "listening" ? " cd--playing" : "");
-    el.style.setProperty("--ry", `${((h % 41) / 10 - 2).toFixed(2)}deg`);
-    if (h % 5 === 0) el.style.setProperty("--lean", h % 2 ? "2deg" : "-2deg");
-    el.innerHTML = '<span class="cd-case"><span class="cd-spine"><img alt="" draggable="false" hidden /><span class="cd-name"></span></span><span class="cd-top"></span></span><span class="cd-pop"><span class="cd-disc"></span><span class="cd-front"><img alt="" draggable="false" hidden /><span class="cd-plain"></span></span></span>';
-    el.querySelector(".cd-name").textContent = `${c.title} \u00b7 ${by(c)}`;
-    el.querySelector(".cd-plain").textContent = `${c.title} \u00b7 ${by(c)}`;
+    if (h % 3 === 0) el.style.setProperty("--lean", h % 2 ? "0.8deg" : "-0.8deg");
+    // the art stays hidden on the shelf; it's only loaded to colour the spine and shows in the card
+    el.innerHTML = '<span class="cd-body"><span class="cd-name"></span></span><img class="art" alt="" hidden />';
+    el.querySelector(".cd-name").textContent = `${by(c)} \u00a0 ${c.title}`;
     return el;
+  }
+
+  // a cd's spine is printed in the album's main colour, so take the most common colour in the art
+  function tint(el, src) {
+    const pic = new Image();
+    pic.crossOrigin = "anonymous";
+    pic.onload = () => {
+      try {
+        const cv = document.createElement("canvas");
+        cv.width = cv.height = 16;
+        const g = cv.getContext("2d");
+        g.drawImage(pic, 0, 0, 16, 16);
+        const d = g.getImageData(0, 0, 16, 16).data;
+        const buckets = new Map();
+        for (let i = 0; i < d.length; i += 4) {
+          const key = (d[i] >> 5) * 64 + (d[i + 1] >> 5) * 8 + (d[i + 2] >> 5);
+          const s = buckets.get(key) || [0, 0, 0, 0];
+          s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; s[3]++;
+          buckets.set(key, s);
+        }
+        const [r, gr, b, n] = [...buckets.values()].sort((x, y) => y[3] - x[3])[0];
+        const [R, G, B] = [r / n, gr / n, b / n].map(Math.round);
+        el.style.setProperty("--c", `rgb(${R}, ${G}, ${B})`);
+        el.classList.toggle("cd--light", 0.299 * R + 0.587 * G + 0.114 * B > 150);
+      } catch {
+        // art from a site that doesn't allow this keeps the default colour
+      }
+    };
+    pic.src = src;
   }
 
   const spines = items.map((it, i) => {
@@ -103,8 +135,8 @@
     el.type = "button";
     el.setAttribute("aria-label", `${it.title} by ${by(it)}`);
     el.style.setProperty("--c", it.color || COLORS[h % COLORS.length]);
-    const imgs = [...el.querySelectorAll("img")];
-    for (const img of imgs) img.onload = () => { img.hidden = false; el.classList.add("has-art"); };
+    const imgs = [...el.querySelectorAll("img.art")];
+    for (const img of imgs) img.onload = () => { img.hidden = false; el.classList.add("has-art"); if (isCd(it) && !it.color) tint(el, img.src); };
     const setImg = () => { const u = artUrl(it, "M"); if (u) for (const img of imgs) img.src = u; };
     if (artUrl(it, "M")) setImg();
     else lookup(it).then(setImg);
@@ -117,7 +149,125 @@
     return el;
   });
 
-  const DEFAULT_NOW = "hover over something for a quote, click it for my thoughts";
+  // ---------- bulletin board (hung on the wall above the shelf) + about card ----------
+  const bookend = document.createElement("button");
+  bookend.type = "button";
+  bookend.className = "board";
+  bookend.setAttribute("aria-label", "about me");
+  bookend.innerHTML = '<span class="bb"><img src="library/photo/board.jpg?v=2" alt="" draggable="false" /></span>';
+  $("shelfRead").before(bookend);
+
+  // ---------- standing calendar at the left end of the shelf ----------
+  // calendar.png is a photo with its printed page blanked out; the current month is laid onto
+  // that page in perspective. CAL_PAGE is the page's corners (top left, top right, bottom right,
+  // bottom left) as a percentage of the photo. The page is laid out at the photo's own pixel size (673 x 664).
+  const CAL_PAGE = [[11.56, 6.87], [87.87, 9.42], [82.54, 84.48], [4.88, 80.16]];
+  function squareTo([x0, y0], [x1, y1], [x2, y2], [x3, y3], w, h) {
+    const sx = x0 - x1 + x2 - x3, sy = y0 - y1 + y2 - y3;
+    const dx1 = x1 - x2, dx2 = x3 - x2, dy1 = y1 - y2, dy2 = y3 - y2, det = dx1 * dy2 - dx2 * dy1;
+    const g = (sx * dy2 - dx2 * sy) / det, k = (dx1 * sy - sx * dy1) / det;
+    const a = x1 - x0 + g * x1, b = x3 - x0 + k * x3, d = y1 - y0 + g * y1, e = y3 - y0 + k * y3;
+    return `matrix3d(${a / w},${d / w},0,${g / w},${b / h},${e / h},0,${k / h},0,0,1,0,${x0},${y0},0,1)`;
+  }
+  function makeCalendar(now = new Date()) {
+    const el = document.createElement("div");
+    el.className = "cal";
+    el.setAttribute("aria-hidden", "true");
+    el.innerHTML = '<img src="library/photo/calendar.png?v=3" alt="" draggable="false" /><div class="cal-page"></div>';
+    const y = now.getFullYear(), m = now.getMonth(), today = now.getDate();
+    const lead = (new Date(y, m, 1).getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
+    const cells = [...Array(lead).fill(""), ...Array.from({ length: days }, (_, i) => i + 1)];
+    const cls = (d, i) => [i % 7 === 6 && "sun", d === today && "today"].filter(Boolean).join(" ");
+    const page = el.querySelector(".cal-page");
+    page.innerHTML = `<span class="cal-num">${m + 1}</span><span class="cal-year">${y}</span>` +
+      `<span class="cal-days">${[..."MTWTFSS"].map((d, i) => `<span class="${cls(0, i)}">${d}</span>`).join("")}</span>` +
+      `<span class="cal-grid">${cells.map((d, i) => `<span class="${cls(d, i)}">${d}</span>`).join("")}</span>`;
+    const fit = () => {
+      const w = el.offsetWidth, h = el.offsetHeight;
+      if (!w) return;
+      const pts = CAL_PAGE.map(([px, py]) => [(px / 100) * w, (py / 100) * h]);
+      page.style.transform = squareTo(...pts, page.offsetWidth, page.offsetHeight);
+    };
+    new ResizeObserver(fit).observe(el);
+    return el;
+  }
+  const calendar = makeCalendar();
+  $("shelfRead").prepend(calendar);
+
+  let aboutFrom = bookend;
+  const safeAboutHref = (value) => {
+    try {
+      const url = new URL(value);
+      return ["http:", "https:", "mailto:"].includes(url.protocol) ? url.href : "";
+    } catch {
+      return "";
+    }
+  };
+  function openAbout(e) {
+    aboutFrom = e?.currentTarget || bookend;
+    const { heading = "about me", text = [], links = [] } = about || {};
+    $("aboutHeading").textContent = heading;
+    const aboutText = $("aboutText");
+    aboutText.replaceChildren(...[].concat(text).map((t) => {
+      const content = String(t);
+      const p = document.createElement("p");
+      const pattern = /\[([^\]]+)\]\(([^)]*)\)/g;
+      let lastIndex = 0;
+      for (const match of content.matchAll(pattern)) {
+        p.append(document.createTextNode(content.slice(lastIndex, match.index)));
+        const href = safeAboutHref(match[2]);
+        if (href) {
+          const link = document.createElement("a");
+          link.href = href;
+          link.textContent = match[1];
+          link.target = "_blank";
+          link.rel = "noopener";
+          p.append(link);
+        } else {
+          p.append(document.createTextNode(match[0]));
+        }
+        lastIndex = match.index + match[0].length;
+      }
+      p.append(document.createTextNode(content.slice(lastIndex)));
+      return p;
+    }));
+    $("aboutOverlay").querySelector(".about-links")?.remove();
+    const aboutLinks = document.createElement("div");
+    aboutLinks.className = "about-links";
+    for (const { label, href: target } of [].concat(links)) {
+      if (!target?.trim()) continue;
+      const href = safeAboutHref(target);
+      if (!href) continue;
+      const link = document.createElement("a");
+      link.className = "lib-btn";
+      link.href = href;
+      link.textContent = label;
+      link.target = "_blank";
+      link.rel = "noopener";
+      aboutLinks.append(link);
+    }
+    if (aboutLinks.childElementCount) aboutText.after(aboutLinks);
+    $("aboutOverlay").hidden = false;
+    document.body.classList.add("lib-locked");
+    $("aboutClose").focus();
+  }
+  function closeAbout() {
+    if ($("aboutOverlay").hidden) return;
+    $("aboutOverlay").hidden = true;
+    document.body.classList.remove("lib-locked");
+    aboutFrom.focus();
+  }
+  bookend.addEventListener("click", openAbout);
+  $("libAbout").addEventListener("click", openAbout);
+  bookend.addEventListener("mouseenter", () => { $("libNow").textContent = "about me"; });
+  bookend.addEventListener("focus", () => { $("libNow").textContent = "about me"; });
+  bookend.addEventListener("mouseleave", () => showNow(null));
+  bookend.addEventListener("blur", () => showNow(null));
+  $("aboutClose").addEventListener("click", closeAbout);
+  $("aboutOverlay").addEventListener("click", (e) => { if (e.target === $("aboutOverlay")) closeAbout(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAbout(); });
+
+  const DEFAULT_NOW = "";
   function showNow(it) {
     const now = $("libNow");
     if (!it) now.textContent = DEFAULT_NOW;
@@ -137,7 +287,6 @@
 
   // ---------- search + filters ----------
   let kind = "all";
-  let genre = "all";
   function chips(box, options, pick) {
     for (const value of options) {
       const chip = document.createElement("button");
@@ -158,7 +307,6 @@
     chips($("libKinds"), ["all", "books", "cds"], (v) => (kind = v));
     $("libKinds").hidden = false;
   }
-  chips($("libFilters"), ["all", ...new Set(items.map((it) => it.genre).filter(Boolean).sort())], (v) => (genre = v));
   $("libSearch").addEventListener("input", filter);
 
   const visible = () => items.map((_, i) => i).filter((i) => !spines[i].hidden);
@@ -167,10 +315,10 @@
     items.forEach((it, i) => {
       const kindOk = kind === "all" || (kind === "cds") === isCd(it);
       const text = norm(`${it.title} ${by(it)} ${it.genre || ""} ${it.favorite || ""}`);
-      spines[i].hidden = !(kindOk && (genre === "all" || it.genre === genre) && text.includes(q));
+      spines[i].hidden = !(kindOk && text.includes(q));
     });
-    const shown = (shelf) => [...shelf.children].some((el) => !el.hidden);
-    $("shelfRead").hidden = !shown($("shelfRead"));
+    const shown = (shelf) => [...shelf.children].some((el) => !el.hidden && el !== calendar);
+    $("shelfRead").hidden = !shown($("shelfRead")) && !bookend.isConnected;
     $("toReadSection").hidden = !shown($("shelfToRead"));
     $("libEmpty").hidden = visible().length > 0;
   }
@@ -251,6 +399,14 @@
     if (e.key === "ArrowLeft") step(-1);
     if (e.key === "ArrowRight") step(1);
   });
+
+  // on narrow screens the room scrolls sideways; start with the shelf in view
+  const scene = $("scene");
+  const row = $("shelfRead");
+  const last = row.lastElementChild;
+  const left = Math.min(bookend.offsetLeft, row.offsetLeft + calendar.offsetLeft);
+  const right = Math.max(bookend.offsetLeft + bookend.offsetWidth, row.offsetLeft + last.offsetLeft + last.offsetWidth);
+  scene.scrollLeft = (left + right) / 2 - scene.clientWidth / 2;
 
   // ---------- typed heading ----------
   const heading = $("libHeading");
