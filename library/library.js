@@ -1,6 +1,6 @@
 // draws the shelf from library/shelf.js. you shouldn't need to edit this file to add books or cds.
 (() => {
-  const { shelf, books = [], about } = window.LIBRARY || {};
+  const { shelf, books = [], about, board = {} } = window.LIBRARY || {};
   const items = shelf || books;
   const $ = (id) => document.getElementById(id);
   const COLORS = ["#3d5226", "#5a7340", "#2b3a1a", "#6b6a4f", "#8a7f68", "#4a5a3a", "#2f3328", "#7a8a5e", "#5c5144", "#1e211a"];
@@ -71,7 +71,8 @@
     el.className = "bk" + (status(b) === "reading" ? " bk--reading" : "");
     const tall = b.height || 18 + (h % 50) / 10;
     el.style.setProperty("--h", tall);
-    el.style.setProperty("--w", Math.min(5, Math.max(1.6, (b.pages || 300) * 0.0065 + 0.4)).toFixed(2));
+    const pageCount = b.pages || (b.type === "manga" ? 192 : 300);
+    el.style.setProperty("--w", Math.min(5, Math.max(1.6, pageCount * 0.0065 + 0.4)).toFixed(2));
     if (h % 5 === 0) el.style.setProperty("--lean", h % 2 ? "1.2deg" : "-1.2deg");
     el.innerHTML = '<span class="bk-body"><span class="bk-cloth"><span class="bk-title"></span><span class="bk-author"></span></span><img class="bk-photo" alt="" draggable="false" hidden /></span>'
       + (status(b) === "reading" ? '<span class="bk-ribbon"></span>' : "");
@@ -154,7 +155,16 @@
   bookend.type = "button";
   bookend.className = "board";
   bookend.setAttribute("aria-label", "about me");
-  bookend.innerHTML = '<span class="bb"><img src="library/photo/board.jpg?v=2" alt="" draggable="false" /></span>';
+  // each pinned thing: where it sits (% of the board), its tilt, and the point it pivots on (its tack or clip)
+  const PINS = [
+    { id: "lily", src: "lily.jpg", left: 8.695, top: 8.109, width: 38.106, tilt: 3, pivot: "50% 6%", tack: [27.75, 10.44] },
+    { id: "receipt", src: "receipt.png", left: 53.187, top: 49.374, width: 40.647, tilt: -4, pivot: "50% 10%", tack: [73.51, 53.37] },
+    { id: "note", src: "note.png", left: 5.196, top: 56.452, width: 43.88, tilt: -3, pivot: "12.5% 14.6%" },
+  ];
+  bookend.innerHTML = '<span class="bb"><img src="library/photo/board/cork.jpg" alt="" draggable="false" />' +
+    PINS.map((p) => `<span class="pin pin-${p.id}" data-pin="${p.id}" style="left:${p.left}%;top:${p.top}%;width:${p.width}%;` +
+      `transform-origin:${p.pivot};--tilt:${p.tilt}deg"><img src="library/photo/board/${p.src}" alt="" draggable="false" /></span>` +
+      (p.tack ? `<i class="tack" style="left:${p.tack[0]}%;top:${p.tack[1]}%"></i>` : "")).join("") + "</span>";
   $("shelfRead").before(bookend);
 
   // ---------- standing calendar at the left end of the shelf ----------
@@ -170,9 +180,10 @@
     return `matrix3d(${a / w},${d / w},0,${g / w},${b / h},${e / h},0,${k / h},0,0,1,0,${x0},${y0},0,1)`;
   }
   function makeCalendar(now = new Date()) {
-    const el = document.createElement("div");
+    const el = document.createElement("button");
+    el.type = "button";
     el.className = "cal";
-    el.setAttribute("aria-hidden", "true");
+    el.setAttribute("aria-label", "this week");
     el.innerHTML = '<img src="library/photo/calendar.png?v=3" alt="" draggable="false" /><div class="cal-page"></div>';
     const y = now.getFullYear(), m = now.getMonth(), today = now.getDate();
     const lead = (new Date(y, m, 1).getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
@@ -193,6 +204,10 @@
   }
   const calendar = makeCalendar();
   $("shelfRead").prepend(calendar);
+  calendar.addEventListener("mouseenter", () => { $("libNow").textContent = "want to talk? here's my schedule"; });
+  calendar.addEventListener("focus", () => { $("libNow").textContent = "want to talk? here's my schedule"; });
+  calendar.addEventListener("mouseleave", () => showNow(null));
+  calendar.addEventListener("blur", () => showNow(null));
 
   let aboutFrom = bookend;
   const safeAboutHref = (value) => {
@@ -257,7 +272,11 @@
     document.body.classList.remove("lib-locked");
     aboutFrom.focus();
   }
-  bookend.addEventListener("click", openAbout);
+  bookend.addEventListener("click", (e) => {
+    const href = board[e.target.closest(".pin")?.dataset.pin]?.trim();
+    if (href) window.open(href, /^https?:/.test(href) ? "_blank" : "_self", "noopener");
+    else openAbout(e);
+  });
   $("libAbout").addEventListener("click", openAbout);
   bookend.addEventListener("mouseenter", () => { $("libNow").textContent = "about me"; });
   bookend.addEventListener("focus", () => { $("libNow").textContent = "about me"; });
@@ -271,9 +290,7 @@
   function showNow(it) {
     const now = $("libNow");
     if (!it) now.textContent = DEFAULT_NOW;
-    else if (it.quote) now.textContent = `\u201c${it.quote}\u201d \u2014 ${it.title}`;
-    else if (it.favorite) now.textContent = `\u266a ${it.favorite} \u2014 ${it.title}`;
-    else now.textContent = `${it.title} \u00b7 ${by(it)}`;
+    else now.textContent = by(it) && norm(by(it)) !== norm(it.title) ? `${it.title} \u00b7 ${by(it)}` : it.title;
   }
   showNow(null);
 
@@ -335,8 +352,30 @@
     $("libArt").classList.toggle("lib-art--playing", status(it) === "listening");
     $("libCover").style.setProperty("--c", spines[i].style.getPropertyValue("--c"));
     $("libCover").classList.toggle("lib-cover--plain", !big);
-    $("libCoverImg").src = big || "";
-    $("libCoverImg").hidden = !big;
+    const coverImg = $("libCoverImg");
+    coverImg.hidden = true;
+    coverImg.onload = null;
+    coverImg.onerror = null;
+    if (big) {
+      const coverSrc = new URL(big, document.baseURI).href;
+      coverImg.onload = () => {
+        if (coverImg.src !== coverSrc || coverImg.currentSrc !== coverSrc) return;
+        coverImg.hidden = false;
+        $("libCover").classList.remove("lib-cover--plain");
+      };
+      coverImg.onerror = () => {
+        if (coverImg.src !== coverSrc) return;
+        coverImg.hidden = true;
+        $("libCover").classList.add("lib-cover--plain");
+      };
+      coverImg.src = big;
+      if (coverImg.complete && coverImg.naturalWidth > 0 && coverImg.currentSrc === coverSrc) {
+        coverImg.hidden = false;
+        $("libCover").classList.remove("lib-cover--plain");
+      }
+    } else {
+      coverImg.removeAttribute("src");
+    }
     $("libCoverTitle").textContent = it.title;
     $("libStatus").textContent = `${cd ? "liner notes" : "book card"} \u00b7 ${STATUS[status(it)] || status(it)}`;
     $("libTitle").textContent = it.title;
@@ -345,9 +384,12 @@
     $("libQuote").hidden = !it.quote;
 
     const stars = it.rating && "\u2605".repeat(it.rating) + "\u2606".repeat(5 - it.rating);
-    const rows = (cd
-      ? [["my rating", stars], ["year", it.year], ["genre", it.genre], ["tracks", it.tracks], ["favorite track", it.favorite]]
-      : [["my rating", stars], ["genre", it.genre], ["page count", it.pages && it.pages.toLocaleString()]]
+    const type = it.type || "book";
+    const rows = (type === "cd"
+      ? [["my rating", stars], ["year", it.year], ["genre", it.genre], ["song count", it.songs ?? it.tracks], ["favorite track", it.favorite]]
+      : type === "manga"
+        ? [["my rating", stars], ["genre", it.genre], ["volume count", it.volumes]]
+        : [["my rating", stars], ["genre", it.genre], ["page count", it.pages && it.pages.toLocaleString()]]
     ).filter(([, v]) => v);
     $("libMeta").replaceChildren(...rows.map(([k, v]) => {
       const row = document.createElement("div");
@@ -376,6 +418,21 @@
     $("libClose").focus({ preventScroll: true });
     $("overlay").scrollTop = 0;
     $("overlay").querySelector(".lib-card").scrollTop = 0;
+
+    const at = list.indexOf(i);
+    if (list.length > 1 && at !== -1) {
+      const neighbors = new Set([
+        list[(at - 1 + list.length) % list.length],
+        list[(at + 1) % list.length],
+      ]);
+      for (const neighbor of neighbors) {
+        const src = artUrl(items[neighbor], "L");
+        if (src) {
+          const image = new Image();
+          image.src = src;
+        }
+      }
+    }
   }
 
   function step(d) {

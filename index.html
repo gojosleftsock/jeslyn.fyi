@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>jeslyn.fyi</title>
-  <link rel="stylesheet" href="styles.css?v=45" />
-  <link rel="stylesheet" href="library/library.css?v=45" />
+  <link rel="stylesheet" href="styles.css?v=61" />
+  <link rel="stylesheet" href="library/library.css?v=61" />
 </head>
 <body>
   <header class="lib-bar">
@@ -75,6 +75,16 @@
     </div>
   </div>
 
+  <div class="lib-overlay" id="weekOverlay" hidden>
+    <div class="wk" role="dialog" aria-modal="true" aria-labelledby="wkTitle">
+      <div class="wk-head">
+        <h2 class="wk-title" id="wkTitle"></h2>
+        <button type="button" class="wk-shelf" id="wkClose">shelf</button>
+      </div>
+      <div class="wk-week" id="wkWeek"></div>
+    </div>
+  </div>
+
   <div class="lib-overlay" id="aboutOverlay" hidden>
     <div class="rec about" role="dialog" aria-modal="true" aria-labelledby="aboutHeading">
       <button class="lib-close" id="aboutClose" type="button">close</button>
@@ -128,8 +138,9 @@
     </form>
   </div>
 
-  <script src="library/shelf.js?v=45"></script>
-  <script src="library/library.js?v=45"></script>
-  <script src="library/recommend.js?v=45"></script>
+  <script src="library/shelf.js?v=61"></script>
+  <script src="library/library.js?v=61"></script>
+  <script src="library/recommend.js?v=61"></script>
+  <script src="library/week.js?v=61"></script>
 </body>
 </html>
