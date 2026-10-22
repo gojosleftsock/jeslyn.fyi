@@ -44,6 +44,16 @@ window.LIBRARY = {
   // the bulletin board. put a link in any of these to make that thing open it; leave "" and it opens the fyi card.
   board: { rain: "https://www.kenji-world.net/english/download/works/Rain.html", receipt: "", note: "" },
 
+  // cards that open from things on the board, laid out like the fyi card (same heading / text format as about)
+  boardCards: {
+    receipt: {
+      heading: "receipts of the past",
+      text: [
+        "so what's on this shelf? it's all for your information, a synthesis of media i think changed me and i'd recommend to someone else. i wrote all the synposes and comments (without ai btw) so i hope you enjoy browsing. :P",
+      ],
+    },
+  },
+
   // the week that opens from the calendar on the shelf. every week looks the same.
   // day -> 0 (sunday) to 6 (saturday); start / end -> 24h hours (13.5 is 1:30 pm); cal -> one of the calendars.
   week: {
@@ -73,6 +83,7 @@ window.LIBRARY = {
     {
       type: "book",
       title: "east of eden",
+      spine: "library/photo/spines/east-of-eden.png",
       author: "john steinbeck",
       status: "finished",
       rating: "",
@@ -105,7 +116,7 @@ window.LIBRARY = {
     {
       type: "book",
       title: "white nights",
-      spine: "library/photo/spines/crime-and-punishment.jpg",
+      spine: "library/photo/spines/white-nights.png",
       height: 21.5,
       author: "fyodor dostoevsky",
       status: "in progress",
@@ -122,6 +133,7 @@ window.LIBRARY = {
     {
       type: "book",
       title: "schoolgirl",
+      spine: "library/photo/spines/schoolgirl.png",
       author: "osamu dazai",
       status: "finished",
       rating: "",
@@ -137,12 +149,13 @@ window.LIBRARY = {
     {
       type: "book",
       title: "james and the giant peach",
+      spine: "library/photo/spines/james-and-the-giant-peach.png",
       author: "roald dahl",
       status: "",
       rating: "",
       genre: "children's fantasy",
       pages: 144,
-      cover: "library/photo/covers/jamesgiantpeach.jpeg",
+      cover: "library/photo/covers/jamesgiantpeach.png",
       quote: "",
       synopsis: "james goes on a wonderful adventure in a giant peach with a crew of giant bugs. they search for the meaning of life and defeat evil aunts with the power of friendship and vitamin c.",
       thoughts: "",
@@ -152,6 +165,7 @@ window.LIBRARY = {
     {
       type: "book",
       title: "the awakening",
+      spine: "library/photo/spines/the-awakening.png",
       author: "kate chopin",
       status: "",
       rating: "",
@@ -167,6 +181,7 @@ window.LIBRARY = {
     {
       type: "book",
       title: "anna karenina",
+      spine: "library/photo/spines/anna-karenina.png",
       author: "leo tolstoy",
       status: "finished",
       rating: "",
@@ -182,6 +197,7 @@ window.LIBRARY = {
     {
       type: "manga",
       title: "haikyu!!",
+      spine: "library/photo/spines/haikyu.png",
       author: "haruichi furudate",
       status: "memorized",
       rating: "",
@@ -198,6 +214,7 @@ window.LIBRARY = {
     {
       type: "manga",
       title: "bungo stray dogs",
+      spine: "library/photo/spines/bungo-stray-dogs.png",
       author: "kafka asagiri & sango harukawa",
       status: "finished",
       rating: "",
@@ -214,6 +231,7 @@ window.LIBRARY = {
     {
       type: "cd",
       title: "TOMMY CANDY SHOP SUGAR ME",
+      spine: "library/photo/spines/tommy-candy-shop-sugar-me.png",
       artist: "Tommy february6",
       status: "",
       rating: "",
@@ -240,6 +258,7 @@ window.LIBRARY = {
     {
       type: "cd",
       title: "This is PATEKO",
+      spine: "library/photo/spines/this-is-pateko.png",
       artist: "PATEKO",
       status: "",
       rating: "",
@@ -248,7 +267,7 @@ window.LIBRARY = {
       songs: 7,
       favorite: "Think About You",
       quote: "",
-      cover: "library/photo/covers/pateko.jpeg"
+      cover: "library/photo/covers/pateko.jpeg",
       tracklist: [
         "OHAYO MY NIGHT",
         "Rainy day (ft. ASH ISLAND, Skinny Brown)",
@@ -264,6 +283,7 @@ window.LIBRARY = {
     {
       type: "cd",
       title: "i might be able to talk about it more",
+      spine: "library/photo/spines/i-might-be-able-to-talk-about-it-more.png",
       artist: "several",
       status: "",
       rating: "",

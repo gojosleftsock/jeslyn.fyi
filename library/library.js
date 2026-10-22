@@ -1,6 +1,6 @@
 // draws the shelf from library/shelf.js. you shouldn't need to edit this file to add books or cds.
 (() => {
-  const { shelf, books = [], about, board = {} } = window.LIBRARY || {};
+  const { shelf, books = [], about, board = {}, boardCards = {} } = window.LIBRARY || {};
   const items = shelf || books;
   const $ = (id) => document.getElementById(id);
   const COLORS = ["#3d5226", "#5a7340", "#2b3a1a", "#6b6a4f", "#8a7f68", "#4a5a3a", "#2f3328", "#7a8a5e", "#5c5144", "#1e211a"];
@@ -96,8 +96,17 @@
     el.className = "cd" + (status(c) === "listening" ? " cd--playing" : "");
     if (h % 3 === 0) el.style.setProperty("--lean", h % 2 ? "0.8deg" : "-0.8deg");
     // the art stays hidden on the shelf; it's only loaded to colour the spine and shows in the card
-    el.innerHTML = '<span class="cd-body"><span class="cd-name"></span></span><img class="art" alt="" hidden />';
-    el.querySelector(".cd-name").textContent = by(c) && norm(by(c)) !== norm(c.title) ? `${by(c)} \u00a0 ${c.title}` : c.title;
+    el.innerHTML = '<span class="cd-body"><span class="cd-name"></span><img class="cd-photo" alt="" draggable="false" hidden /></span><img class="art" alt="" hidden />';
+    el.querySelector(".cd-name").textContent = c.title;
+    if (c.spine) {
+      const img = el.querySelector(".cd-photo");
+      img.onload = () => {
+        img.hidden = false;
+        el.classList.add("has-photo");
+        el.style.setProperty("--cw", ((12.4 * img.naturalWidth) / img.naturalHeight).toFixed(2));
+      };
+      img.src = c.spine;
+    }
     return el;
   }
 
@@ -149,6 +158,16 @@
     (QUEUE.has(status(it)) ? $("shelfToRead") : $("shelfRead")).append(el);
     return el;
   });
+
+  // each cd's title shrinks until it fits its spine (sizes are in cqw, so the ratio holds at any width)
+  function fitCdNames() {
+    for (const n of document.querySelectorAll(".cd-name")) {
+      n.style.removeProperty("--fit");
+      if (n.clientHeight && n.scrollHeight > n.clientHeight) n.style.setProperty("--fit", (n.clientHeight / n.scrollHeight * 0.98).toFixed(3));
+    }
+  }
+  document.fonts.ready.then(fitCdNames);
+  addEventListener("resize", fitCdNames);
 
   // ---------- bulletin board (hung on the wall above the shelf) + about card ----------
   const bookend = document.createElement("button");
@@ -244,9 +263,9 @@
     return true;
   };
 
-  function openAbout(e) {
+  function openAbout(e, card = about) {
     aboutFrom = e?.currentTarget || bookend;
-    const { heading = "about me", text = [], links = [] } = about || {};
+    const { heading = "about me", text = [], links = [] } = card || {};
     $("aboutHeading").textContent = heading;
     const aboutText = $("aboutText");
     aboutText.replaceChildren(...[].concat(text).map((t) => {
@@ -297,16 +316,17 @@
     aboutFrom.focus();
   }
   bookend.addEventListener("click", (e) => {
-    const href = board[e.target.closest(".pin")?.dataset.pin]?.trim();
+    const id = e.target.closest(".pin")?.dataset.pin;
+    const href = board[id]?.trim();
     if (href) window.open(href, /^https?:/.test(href) ? "_blank" : "_self", "noopener");
-    else openAbout(e);
+    else openAbout(e, boardCards[id]);
   });
-  $("libAbout").addEventListener("click", openAbout);
+  $("libAbout").addEventListener("click", (e) => openAbout(e));
   bookend.addEventListener("mouseover", (e) => {
     const pin = PINS.find((p) => p.id === e.target.closest(".pin")?.dataset.pin);
-    $("libNow").textContent = pin?.say || "about me";
+    $("libNow").textContent = pin?.say || boardCards[pin?.id]?.heading || "about me";
   });
-  bookend.addEventListener("focus", () => { $("libNow").textContent = "about me"; });
+  bookend.addEventListener("focus", () => { if (!bookend.matches(":hover")) $("libNow").textContent = "about me"; });
   bookend.addEventListener("mouseleave", () => showNow(null));
   bookend.addEventListener("blur", () => showNow(null));
   $("aboutClose").addEventListener("click", closeAbout);
