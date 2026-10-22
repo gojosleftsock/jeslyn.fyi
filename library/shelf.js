@@ -119,7 +119,7 @@ window.LIBRARY = {
       spine: "library/photo/spines/white-nights.png",
       height: 21.5,
       author: "fyodor dostoevsky",
-      status: "in progress",
+      status: "finished",
       rating: "",
       genre: "psychological fiction",
       pages: 82,

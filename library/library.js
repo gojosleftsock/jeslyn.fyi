@@ -392,7 +392,7 @@
       coverImg.removeAttribute("src");
     }
     $("libCoverTitle").textContent = it.title;
-    $("libStatus").textContent = `${cd ? "liner notes" : "book card"} \u00b7 ${STATUS[status(it)] || status(it)}`;
+    $("libStatus").textContent = `${cd ? "album" : "book card"} \u00b7 ${STATUS[status(it)] || status(it)}`;
     $("libTitle").textContent = it.title;
     $("libAuthor").textContent = by(it);
     $("libQuote").textContent = it.quote ? `\u201c${it.quote}\u201d` : "";
