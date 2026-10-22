@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>jeslyn.fyi</title>
-  <link rel="stylesheet" href="styles.css?v=41" />
-  <link rel="stylesheet" href="library/library.css?v=41" />
+  <link rel="stylesheet" href="styles.css?v=45" />
+  <link rel="stylesheet" href="library/library.css?v=45" />
 </head>
 <body>
   <header class="lib-bar">
@@ -58,7 +58,6 @@
         </div>
       </div>
       <div class="lib-card">
-        <button class="lib-close" id="libClose" type="button">close</button>
         <div class="lib-head" id="libStatus"></div>
         <h2 class="lib-title" id="libTitle"></h2>
         <p class="lib-author" id="libAuthor"></p>
@@ -66,8 +65,11 @@
         <dl class="lib-meta" id="libMeta"></dl>
         <div class="lib-detail" id="libDetail"></div>
         <div class="lib-nav">
-          <button type="button" id="libPrev">&larr; previous</button>
-          <button type="button" id="libNext">next &rarr;</button>
+          <div class="lib-steps">
+            <button type="button" id="libPrev">&larr; previous</button>
+            <button type="button" id="libNext">next &rarr;</button>
+          </div>
+          <button type="button" id="libClose" class="lib-shelve">shelf</button>
         </div>
       </div>
     </div>
@@ -126,8 +128,8 @@
     </form>
   </div>
 
-  <script src="library/shelf.js?v=41"></script>
-  <script src="library/library.js?v=41"></script>
-  <script src="library/recommend.js?v=41"></script>
+  <script src="library/shelf.js?v=45"></script>
+  <script src="library/library.js?v=45"></script>
+  <script src="library/recommend.js?v=45"></script>
 </body>
 </html>

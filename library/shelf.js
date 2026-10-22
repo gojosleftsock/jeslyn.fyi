@@ -4,7 +4,8 @@
 // books:
 //   status  -> "read", "reading" (gets a bookmark), or "to-read" (goes on the to-read shelf)
 //   cover   -> optional. an image url or an open library cover id. leave it out to look it up automatically
-//   genre, pages, words, rating (1-5), quote (shown on hover), synopsis, thoughts, recommend
+//   genre, pages, rating (1-5), quote (shown on hover), synopsis, thoughts,
+//   whyRead ("why i read it"), reread ("why i'd reread it")
 //
 // cds: same idea, plus  type: "cd"
 //   status  -> "listened", "listening" (the disc peeks out), or "to-listen" (goes on the to-read shelf)
@@ -42,11 +43,11 @@ window.LIBRARY = {
       status: "read",
       genre: "dystopian fiction",
       pages: 311,
-      words: 64531,
       cover: 8231823,
       quote: "i don't want comfort. i want poetry, i want real danger, i want freedom.",
       synopsis: "a world engineered for stability through conditioning, consumption, and a drug called soma — until a few people start to feel the cost of frictionless happiness.",
-      recommend: "anyone who's ever wondered whether comfort and freedom can actually coexist.",
+      whyRead: "",
+      reread: "",
     },
     {
       // placeholder cd: swap in your own
@@ -68,11 +69,11 @@ window.LIBRARY = {
       status: "read",
       genre: "literary fiction",
       pages: 336,
-      words: 112473,
       cover: 12984540,
       quote: "lolita, light of my life, fire of my loins.",
       synopsis: "an unreliable narrator's confession that dazzles with language while describing something monstrous — a novel about obsession, self-deception, and the seductiveness of prose.",
-      recommend: "readers who want to argue with a narrator on every single page.",
+      whyRead: "",
+      reread: "",
     },
     {
       title: "crime and punishment",
@@ -82,11 +83,11 @@ window.LIBRARY = {
       status: "read",
       genre: "psychological fiction",
       pages: 671,
-      words: 211591,
       cover: 13116014,
       quote: "to go wrong in one's own way is better than to go right in someone else's.",
       synopsis: "a destitute ex-student talks himself into a murder, then spends the rest of the book unraveling under the weight of his own conscience.",
-      recommend: "anyone drawn to guilt, redemption, and long feverish walks through the city.",
+      whyRead: "",
+      reread: "",
     },
     {
       // placeholder cd: swap in your own

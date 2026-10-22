@@ -338,7 +338,7 @@
     $("libCoverImg").src = big || "";
     $("libCoverImg").hidden = !big;
     $("libCoverTitle").textContent = it.title;
-    $("libStatus").textContent = `${cd ? "liner notes" : "library card"} \u00b7 ${STATUS[status(it)] || status(it)}`;
+    $("libStatus").textContent = `${cd ? "liner notes" : "book card"} \u00b7 ${STATUS[status(it)] || status(it)}`;
     $("libTitle").textContent = it.title;
     $("libAuthor").textContent = by(it);
     $("libQuote").textContent = it.quote ? `\u201c${it.quote}\u201d` : "";
@@ -347,7 +347,7 @@
     const stars = it.rating && "\u2605".repeat(it.rating) + "\u2606".repeat(5 - it.rating);
     const rows = (cd
       ? [["my rating", stars], ["year", it.year], ["genre", it.genre], ["tracks", it.tracks], ["favorite track", it.favorite]]
-      : [["my rating", stars], ["genre", it.genre], ["page count", it.pages && it.pages.toLocaleString()], ["word count", it.words && it.words.toLocaleString()]]
+      : [["my rating", stars], ["genre", it.genre], ["page count", it.pages && it.pages.toLocaleString()]]
     ).filter(([, v]) => v);
     $("libMeta").replaceChildren(...rows.map(([k, v]) => {
       const row = document.createElement("div");
@@ -358,7 +358,7 @@
       return row;
     }));
 
-    const sections = [["synopsis", it.synopsis], ["my thoughts", it.thoughts], ["recommended for", it.recommend]].filter(([, v]) => v);
+    const sections = [["synopsis", it.synopsis], ["my thoughts", it.thoughts], ...(cd ? [["recommended for", it.recommend]] : [["why i read it", it.whyRead], ["why i'd reread it", it.reread]])].filter(([, v]) => v);
     $("libDetail").replaceChildren(...sections.flatMap(([k, v]) => {
       const h = document.createElement("h4");
       const p = document.createElement("p");
@@ -373,7 +373,9 @@
     $("libNext").disabled = list.length < 2;
     $("overlay").hidden = false;
     document.body.classList.add("lib-locked");
-    $("libClose").focus();
+    $("libClose").focus({ preventScroll: true });
+    $("overlay").scrollTop = 0;
+    $("overlay").querySelector(".lib-card").scrollTop = 0;
   }
 
   function step(d) {
@@ -399,6 +401,31 @@
     if (e.key === "ArrowLeft") step(-1);
     if (e.key === "ArrowRight") step(1);
   });
+  let wheelDeltaX = 0;
+  let wheelIgnoreUntil = 0;
+  $("overlay").addEventListener("wheel", (e) => {
+    if ($("overlay").hidden || Math.abs(e.deltaX) <= Math.abs(e.deltaY) || Date.now() < wheelIgnoreUntil) return;
+    wheelDeltaX += e.deltaX;
+    if (Math.abs(wheelDeltaX) >= 60) {
+      step(wheelDeltaX > 0 ? 1 : -1);
+      wheelDeltaX = 0;
+      wheelIgnoreUntil = Date.now() + 450;
+    }
+  }, { passive: true });
+  let touchStart = null;
+  $("overlay").addEventListener("touchstart", (e) => {
+    const touch = e.touches[0];
+    touchStart = $("overlay").hidden || !touch ? null : { x: touch.clientX, y: touch.clientY };
+  }, { passive: true });
+  $("overlay").addEventListener("touchend", (e) => {
+    if ($("overlay").hidden || !touchStart) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStart.x;
+    const dy = touch.clientY - touchStart.y;
+    touchStart = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) step(dx < 0 ? 1 : -1);
+  }, { passive: true });
+  $("overlay").addEventListener("touchcancel", () => { touchStart = null; }, { passive: true });
 
   // on narrow screens the room scrolls sideways; start with the shelf in view
   const scene = $("scene");
