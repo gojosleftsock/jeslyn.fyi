@@ -16,7 +16,7 @@
 //   status  -> "listened", "listening" (the disc peeks out), or "to-listen" (goes on the to-read shelf)
 //   cover   -> optional. an image url. leave it out to look up the album art automatically
 //   artist, year, genre, songs ("song count"), favorite (song), rating, quote (a lyric, shown on hover),
-//   synopsis, thoughts, recommend
+//   tracklist (a list of song titles, shown as bullets where books have a synopsis), thoughts, recommend
 //
 // anything you don't have, just leave out or leave as "".
 window.LIBRARY = {
@@ -29,9 +29,10 @@ window.LIBRARY = {
   // each string in text is its own paragraph.
   // use [text](url) in text to make a link; links with an empty href are hidden.
   about: {
-    heading: "hi, i'm jeslyn",
+    heading: "jeslyn nguyen",
     text: [
       "a junior studying data science & linguistics @ uc berkeley. i like acronyms, idioms, heytea cloud jasmine, and [math tournaments](https://berkeley.mt).",
+      "currently reading: the beautiful and the damned by francis s. fitzgerald",
     ],
     links: [
       { label: "github", href: "https://github.com/gojosleftsock" },
@@ -41,7 +42,7 @@ window.LIBRARY = {
   },
 
   // the bulletin board. put a link in any of these to make that thing open it; leave "" and it opens the fyi card.
-  board: { lily: "", receipt: "", note: "" },
+  board: { rain: "https://www.kenji-world.net/english/download/works/Rain.html", receipt: "", note: "" },
 
   // the week that opens from the calendar on the shelf. every week looks the same.
   // day -> 0 (sunday) to 6 (saturday); start / end -> 24h hours (13.5 is 1:30 pm); cal -> one of the calendars.
@@ -237,7 +238,20 @@ window.LIBRARY = {
       songs: 12,
       favorite: "",
       quote: "",
-      synopsis: "the debut solo album from tomoko kawase of the brilliant green, recording as her alter ego tommy february6: sugary, '80s-inspired electropop.",
+      tracklist: [
+        "t.o.m.m.y",
+        "everyday at the bus stop",
+        "tommy febratte, macaron.",
+        "bloomin'!",
+        "hey bad boy",
+        "\u2661kiss\u2661 one more time",
+        "where are you? \"my hero\"",
+        "walk away from you my babe",
+        "koi wa nemuranai",
+        "can't take my eyes off of you",
+        "i'll be your angel",
+        "\u2605candy pop in love\u2605",
+      ],
       thoughts: "",
       recommend: "",
     },

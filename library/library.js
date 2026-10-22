@@ -97,7 +97,7 @@
     if (h % 3 === 0) el.style.setProperty("--lean", h % 2 ? "0.8deg" : "-0.8deg");
     // the art stays hidden on the shelf; it's only loaded to colour the spine and shows in the card
     el.innerHTML = '<span class="cd-body"><span class="cd-name"></span></span><img class="art" alt="" hidden />';
-    el.querySelector(".cd-name").textContent = `${by(c)} \u00a0 ${c.title}`;
+    el.querySelector(".cd-name").textContent = by(c) && norm(by(c)) !== norm(c.title) ? `${by(c)} \u00a0 ${c.title}` : c.title;
     return el;
   }
 
@@ -157,7 +157,7 @@
   bookend.setAttribute("aria-label", "about me");
   // each pinned thing: where it sits (% of the board), its tilt, and the point it pivots on (its tack or clip)
   const PINS = [
-    { id: "lily", src: "lily.jpg", left: 8.695, top: 8.109, width: 38.106, tilt: 3, pivot: "50% 6%", tack: [27.75, 10.44] },
+    { id: "rain", src: "rain.jpg", left: 8.695, top: 8.109, width: 44, tilt: 3, pivot: "50% 6%", tack: [30.7, 10.44], say: "be not defeated by the rain" },
     { id: "receipt", src: "receipt.png", left: 53.187, top: 49.374, width: 40.647, tilt: -4, pivot: "50% 10%", tack: [73.51, 53.37] },
     { id: "note", src: "note.png", left: 5.196, top: 56.452, width: 43.88, tilt: -3, pivot: "12.5% 14.6%" },
   ];
@@ -169,9 +169,9 @@
 
   // ---------- standing calendar at the left end of the shelf ----------
   // calendar.png is a photo with its printed page blanked out; the current month is laid onto
-  // that page in perspective. CAL_PAGE is the page's corners (top left, top right, bottom right,
+  // that page (the photo has been straightened to face the front). CAL_PAGE is the page's corners (top left, top right, bottom right,
   // bottom left) as a percentage of the photo. The page is laid out at the photo's own pixel size (673 x 664).
-  const CAL_PAGE = [[11.56, 6.87], [87.87, 9.42], [82.54, 84.48], [4.88, 80.16]];
+  const CAL_PAGE = [[4.67, 7.93], [95.33, 7.93], [95.33, 86.01], [4.67, 86.01]];
   function squareTo([x0, y0], [x1, y1], [x2, y2], [x3, y3], w, h) {
     const sx = x0 - x1 + x2 - x3, sy = y0 - y1 + y2 - y3;
     const dx1 = x1 - x2, dx2 = x3 - x2, dy1 = y1 - y2, dy2 = y3 - y2, det = dx1 * dy2 - dx2 * dy1;
@@ -184,7 +184,7 @@
     el.type = "button";
     el.className = "cal";
     el.setAttribute("aria-label", "this week");
-    el.innerHTML = '<img src="library/photo/calendar.png?v=3" alt="" draggable="false" /><div class="cal-page"></div>';
+    el.innerHTML = '<img src="library/photo/calendar.png?v=5" alt="" draggable="false" /><div class="cal-page"></div>';
     const y = now.getFullYear(), m = now.getMonth(), today = now.getDate();
     const lead = (new Date(y, m, 1).getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
     const cells = [...Array(lead).fill(""), ...Array.from({ length: days }, (_, i) => i + 1)];
@@ -218,6 +218,32 @@
       return "";
     }
   };
+  // overlays close by playing their opening backwards, then hide
+  const overlayMotion = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.libStay = (overlay) => {
+    clearTimeout(overlay.leaving);
+    overlay.stopLeaving?.();
+    overlay.classList.remove("lib-leaving");
+    overlay.hidden = false;
+  };
+  window.libLeave = (overlay) => {
+    if (overlay.hidden || overlay.classList.contains("lib-leaving")) return false;
+    const finish = () => {
+      overlay.stopLeaving?.();
+      overlay.classList.remove("lib-leaving");
+      overlay.hidden = true;
+      if (!document.querySelector(".lib-overlay:not([hidden])")) document.body.classList.remove("lib-locked");
+    };
+    if (!overlayMotion) { finish(); return true; }
+    overlay.classList.add("lib-leaving");
+    // wait for the panel to finish sinking even on a slow device; the timer is only a fallback
+    const onEnd = (e) => { if (e.animationName === "lib-sink") { clearTimeout(overlay.leaving); finish(); } };
+    overlay.addEventListener("animationend", onEnd);
+    overlay.leaving = setTimeout(finish, 900);
+    overlay.stopLeaving = () => overlay.removeEventListener("animationend", onEnd);
+    return true;
+  };
+
   function openAbout(e) {
     aboutFrom = e?.currentTarget || bookend;
     const { heading = "about me", text = [], links = [] } = about || {};
@@ -262,14 +288,12 @@
       aboutLinks.append(link);
     }
     if (aboutLinks.childElementCount) aboutText.after(aboutLinks);
-    $("aboutOverlay").hidden = false;
+    libStay($("aboutOverlay"));
     document.body.classList.add("lib-locked");
     $("aboutClose").focus();
   }
   function closeAbout() {
-    if ($("aboutOverlay").hidden) return;
-    $("aboutOverlay").hidden = true;
-    document.body.classList.remove("lib-locked");
+    if (!libLeave($("aboutOverlay"))) return;
     aboutFrom.focus();
   }
   bookend.addEventListener("click", (e) => {
@@ -278,7 +302,10 @@
     else openAbout(e);
   });
   $("libAbout").addEventListener("click", openAbout);
-  bookend.addEventListener("mouseenter", () => { $("libNow").textContent = "about me"; });
+  bookend.addEventListener("mouseover", (e) => {
+    const pin = PINS.find((p) => p.id === e.target.closest(".pin")?.dataset.pin);
+    $("libNow").textContent = pin?.say || "about me";
+  });
   bookend.addEventListener("focus", () => { $("libNow").textContent = "about me"; });
   bookend.addEventListener("mouseleave", () => showNow(null));
   bookend.addEventListener("blur", () => showNow(null));
@@ -302,44 +329,12 @@
   const queue = items.filter((it) => QUEUE.has(status(it)));
   $("toReadCount").textContent = tally(queue, "book");
 
-  // ---------- search + filters ----------
-  let kind = "all";
-  function chips(box, options, pick) {
-    for (const value of options) {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "lib-chip";
-      chip.textContent = value;
-      chip.setAttribute("aria-pressed", value === "all");
-      chip.addEventListener("click", () => {
-        pick(value);
-        for (const c of box.children) c.setAttribute("aria-pressed", c === chip);
-        filter();
-      });
-      box.append(chip);
-    }
-  }
-  const hasCds = items.some(isCd);
-  if (hasCds && items.some((it) => !isCd(it))) {
-    chips($("libKinds"), ["all", "books", "cds"], (v) => (kind = v));
-    $("libKinds").hidden = false;
-  }
-  $("libSearch").addEventListener("input", filter);
-
+  // ---------- shelves ----------
   const visible = () => items.map((_, i) => i).filter((i) => !spines[i].hidden);
-  function filter() {
-    const q = norm($("libSearch").value);
-    items.forEach((it, i) => {
-      const kindOk = kind === "all" || (kind === "cds") === isCd(it);
-      const text = norm(`${it.title} ${by(it)} ${it.genre || ""} ${it.favorite || ""}`);
-      spines[i].hidden = !(kindOk && text.includes(q));
-    });
-    const shown = (shelf) => [...shelf.children].some((el) => !el.hidden && el !== calendar);
-    $("shelfRead").hidden = !shown($("shelfRead")) && !bookend.isConnected;
-    $("toReadSection").hidden = !shown($("shelfToRead"));
-    $("libEmpty").hidden = visible().length > 0;
-  }
-  filter();
+  const shown = (shelf) => [...shelf.children].some((el) => !el.hidden && el !== calendar);
+  $("shelfRead").hidden = !shown($("shelfRead")) && !bookend.isConnected;
+  $("toReadSection").hidden = !shown($("shelfToRead"));
+  $("libEmpty").hidden = visible().length > 0;
 
   // ---------- open book / cd ----------
   let current = -1;
@@ -386,7 +381,7 @@
     const stars = it.rating && "\u2605".repeat(it.rating) + "\u2606".repeat(5 - it.rating);
     const type = it.type || "book";
     const rows = (type === "cd"
-      ? [["my rating", stars], ["year", it.year], ["genre", it.genre], ["song count", it.songs ?? it.tracks], ["favorite track", it.favorite]]
+      ? [["my rating", stars], ["year", it.year], ["genre", it.genre], ["song count", it.songs ?? it.tracks ?? it.tracklist?.length], ["favorite track", it.favorite]]
       : type === "manga"
         ? [["my rating", stars], ["genre", it.genre], ["volume count", it.volumes]]
         : [["my rating", stars], ["genre", it.genre], ["page count", it.pages && it.pages.toLocaleString()]]
@@ -400,11 +395,17 @@
       return row;
     }));
 
-    const sections = [["synopsis", it.synopsis], ["my thoughts", it.thoughts], ...(cd ? [["recommended for", it.recommend]] : [["why i read it", it.whyRead], ["why i'd reread it", it.reread]])].filter(([, v]) => v);
+    const sections = [cd ? ["track list", it.tracklist?.length && it.tracklist] : ["synopsis", it.synopsis], ["my thoughts", it.thoughts], ...(cd ? [["recommended for", it.recommend]] : [["why i read it", it.whyRead], ["why i'd reread it", it.reread]])].filter(([, v]) => v);
     $("libDetail").replaceChildren(...sections.flatMap(([k, v]) => {
       const h = document.createElement("h4");
-      const p = document.createElement("p");
       h.textContent = k;
+      if (Array.isArray(v)) {
+        const ul = document.createElement("ul");
+        ul.className = "lib-tracks";
+        ul.replaceChildren(...v.map((song) => Object.assign(document.createElement("li"), { textContent: song })));
+        return [h, ul];
+      }
+      const p = document.createElement("p");
       p.textContent = v;
       return [h, p];
     }));
@@ -413,7 +414,7 @@
     const list = visible();
     $("libPrev").disabled = list.length < 2;
     $("libNext").disabled = list.length < 2;
-    $("overlay").hidden = false;
+    libStay($("overlay"));
     document.body.classList.add("lib-locked");
     $("libClose").focus({ preventScroll: true });
     $("overlay").scrollTop = 0;
@@ -442,9 +443,7 @@
   }
 
   function close() {
-    if ($("overlay").hidden) return;
-    $("overlay").hidden = true;
-    document.body.classList.remove("lib-locked");
+    if (!libLeave($("overlay"))) return;
     spines[current]?.focus();
   }
 

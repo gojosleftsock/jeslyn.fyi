@@ -26,15 +26,13 @@
 
   function openRec() {
     reset();
-    overlay.hidden = false;
+    libStay(overlay);
     document.body.classList.add("lib-locked");
     $("recQuery").focus();
   }
 
   function closeRec() {
-    if (overlay.hidden) return;
-    overlay.hidden = true;
-    document.body.classList.remove("lib-locked");
+    if (!libLeave(overlay)) return;
     clearTimeout(searchTimer);
     searching?.abort();
     $("libRecommend").focus();

@@ -33,7 +33,6 @@
     for (let d = 0; d < 7; d++) {
       const date = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate() + d);
       const head = el("div", "wk-day" + (d === 0 || d === 6 ? " wkend" : "") + (d === now.getDay() ? " today" : ""));
-      head.style.setProperty("--i", d);
       head.append(el("span", "", DOW[d]), el("span", "wk-num", String(date.getDate())));
       grid.append(head);
     }
@@ -55,7 +54,6 @@
     for (let d = 0; d < 7; d++) {
       const col = el("div", "wk-col" + (d === 0 || d === 6 ? " wkend" : ""));
       col.dataset.day = d;
-      col.style.setProperty("--i", d);
       for (let h = START + 1; h < END; h++) {
         const line = el("div", "wk-hour");
         line.style.top = pct(h);
@@ -100,29 +98,18 @@
     overlay.querySelector(".wk-gutter").append(label);
   }
 
-  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let timer = 0, closing = 0;
+  let timer = 0;
   function open() {
-    clearTimeout(closing);
-    overlay.classList.remove("wk-closing");
     tick();
-    overlay.hidden = false;
+    libStay(overlay);
     document.body.classList.add("lib-locked");
     timer = setInterval(tick, 30 * 1000);
     $("wkClose").focus();
   }
   function close() {
-    if (overlay.hidden || overlay.classList.contains("wk-closing")) return;
+    if (!libLeave(overlay)) return;
     clearInterval(timer);
     trigger.focus();
-    const done = () => {
-      overlay.hidden = true;
-      overlay.classList.remove("wk-closing");
-      document.body.classList.remove("lib-locked");
-    };
-    if (reduceMotion) return done();
-    overlay.classList.add("wk-closing");
-    closing = setTimeout(done, 300);
   }
   trigger.addEventListener("click", open);
   $("wkClose").addEventListener("click", close);
