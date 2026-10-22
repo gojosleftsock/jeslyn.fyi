@@ -31,7 +31,7 @@ window.LIBRARY = {
   about: {
     heading: "jeslyn nguyen",
     text: [
-      "a junior studying data science & linguistics @ uc berkeley. i like acronyms, idioms, heytea cloud jasmine, and [math tournaments](https://berkeley.mt)!",
+      "a junior studying data science & linguistics @ uc berkeley, into backend, data infra & ml systems. i like acronyms, idioms, heytea cloud jasmine, and [math tournaments](https://berkeley.mt)!",
       "currently reading: the beautiful and the damned by francis s. fitzgerald",
     ],
     links: [
