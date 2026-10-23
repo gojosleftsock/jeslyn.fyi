@@ -186,6 +186,25 @@
       (p.tack ? `<i class="tack" style="left:${p.tack[0]}%;top:${p.tack[1]}%"></i>` : "")).join("") + "</span>";
   $("shelfRead").before(bookend);
 
+  // first visit: outline the note and point at it until the about card has been opened from the board once
+  const HINT_KEY = "jf-board-hint-done";
+  let hint = false;
+  try { hint = !localStorage.getItem(HINT_KEY); } catch {}
+  if (hint) {
+    bookend.classList.add("hint");
+    bookend.insertAdjacentHTML("beforeend", '<svg class="hint-call" viewBox="0 0 866 620" aria-hidden="true">' +
+      '<path class="hint-line" pathLength="1" d="M470 238 C380 186 262 206 220 326" />' +
+      '<path class="hint-head" d="M236.6 311.7 L220 326 L216 304.5" />' +
+      '<text x="482" y="250">click me!</text></svg>');
+  }
+  function endHint() {
+    if (!hint) return;
+    hint = false;
+    bookend.classList.remove("hint");
+    bookend.querySelector(".hint-call")?.remove();
+    try { localStorage.setItem(HINT_KEY, "1"); } catch {}
+  }
+
   // ---------- standing calendar at the left end of the shelf ----------
   // calendar.png is a photo with its printed page blanked out; the current month is laid onto
   // that page (the photo has been straightened to face the front). CAL_PAGE is the page's corners (top left, top right, bottom right,
@@ -319,7 +338,10 @@
     const id = e.target.closest(".pin")?.dataset.pin;
     const href = board[id]?.trim();
     if (href) window.open(href, /^https?:/.test(href) ? "_blank" : "_self", "noopener");
-    else openAbout(e, boardCards[id]);
+    else {
+      if (!boardCards[id]) endHint();
+      openAbout(e, boardCards[id]);
+    }
   });
   $("libAbout").addEventListener("click", (e) => openAbout(e));
   bookend.addEventListener("mouseover", (e) => {
