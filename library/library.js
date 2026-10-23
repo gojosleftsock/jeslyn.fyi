@@ -378,9 +378,61 @@
   $("toReadSection").hidden = !shown($("shelfToRead"));
   $("libEmpty").hidden = visible().length > 0;
 
+  // ---------- cd music: the disc peeks out when a cd opens; play slides it halfway out and spins it ----------
+  const music = new Audio();
+  music.preload = "none";
+  const playBtn = document.createElement("button");
+  playBtn.type = "button";
+  playBtn.className = "lib-play";
+  let fade = 0;
+  function fadeTo(vol, ms, then) {
+    cancelAnimationFrame(fade);
+    const from = music.volume, t0 = performance.now();
+    const tick = (t) => {
+      const k = Math.min(1, Math.max(0, (t - t0) / ms));
+      music.volume = Math.min(1, Math.max(0, from + (vol - from) * k));
+      if (k < 1) fade = requestAnimationFrame(tick);
+      else then?.();
+    };
+    fade = requestAnimationFrame(tick);
+  }
+  function showPlaying(on) {
+    $("libArt").classList.toggle("lib-art--music", on);
+    playBtn.innerHTML = on
+      ? '<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="1.5" width="2.2" height="7" rx="0.4"/><rect x="5.8" y="1.5" width="2.2" height="7" rx="0.4"/></svg>'
+      : '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M3 1.4v7.2a.4.4 0 0 0 .6.35l5.6-3.6a.4.4 0 0 0 0-.7L3.6 1.05A.4.4 0 0 0 3 1.4z"/></svg>';
+    playBtn.setAttribute("aria-label", on ? "pause the song" : "play the song");
+  }
+  function playMusic() {
+    const it = items[current];
+    if (!it?.audio) return;
+    const src = new URL(it.audio, document.baseURI).href;
+    if (music.src !== src) music.src = src;
+    music.volume = 0;
+    $("libArt").classList.add("lib-art--out");
+    showPlaying(true);
+    music.play().then(() => fadeTo(0.7, 700)).catch(() => showPlaying(false));
+  }
+  function pauseMusic(ms = 300) {
+    showPlaying(false);
+    if (music.paused) return;
+    fadeTo(0, ms, () => music.pause());
+  }
+  function stopMusic() {
+    cancelAnimationFrame(fade);
+    music.pause();
+    if (music.src) music.currentTime = 0;
+    $("libArt").classList.remove("lib-art--out");
+    showPlaying(false);
+  }
+  playBtn.addEventListener("click", () => (music.paused || !$("libArt").classList.contains("lib-art--music") ? playMusic() : pauseMusic()));
+  music.addEventListener("ended", () => { showPlaying(false); music.currentTime = 0; });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) pauseMusic(0); });
+
   // ---------- open book / cd ----------
   let current = -1;
   function open(i) {
+    stopMusic();
     current = i;
     const it = items[i];
     const cd = isCd(it);
@@ -423,7 +475,7 @@
     const stars = it.rating && "\u2605".repeat(it.rating) + "\u2606".repeat(5 - it.rating);
     const type = it.type || "book";
     const rows = (type === "cd"
-      ? [["my rating", stars], ["year", it.year], ["genre", it.genre], ["song count", it.songs ?? it.tracks ?? it.tracklist?.length], ["favorite track", it.favorite]]
+      ? [["my rating", stars], ["year", it.year], ["genre", it.genre], ["song count", it.songs ?? it.tracks ?? it.tracklist?.length], ["favorite track", it.favorite || (it.audio ? " " : "")]]
       : type === "manga"
         ? [["my rating", stars], ["genre", it.genre], ["volume count", it.volumes]]
         : [["my rating", stars], ["genre", it.genre], ["page count", it.pages && it.pages.toLocaleString()]]
@@ -433,7 +485,17 @@
       row.className = "lib-row";
       row.innerHTML = "<dt></dt><dd></dd>";
       row.firstChild.textContent = k;
-      row.lastChild.textContent = v;
+      row.lastChild.textContent = v.trim?.() ?? v;
+      if (k === "favorite track" && cd && /^https?:\/\//.test(it.favoriteLink || "")) {
+        const a = document.createElement("a");
+        a.className = "lib-fav";
+        a.href = it.favoriteLink;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = row.lastChild.textContent + " \u2197";
+        row.lastChild.replaceChildren(a);
+      }
+      if (k === "favorite track" && cd && it.audio) row.lastChild.append(playBtn);
       return row;
     }));
 
@@ -486,6 +548,7 @@
 
   function close() {
     if (!libLeave($("overlay"))) return;
+    pauseMusic(400);
     spines[current]?.focus();
   }
 

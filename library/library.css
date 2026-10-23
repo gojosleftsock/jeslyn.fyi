@@ -1,3 +1,4 @@
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 /* digital library bookshelf (digital-library.html) */
 .lib, .lib-overlay { --paper: #f4f2ed; --wood: #ddd8ce; --wood-dark: #bdb6a8; --shadow: 42, 36, 20; --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E"); }
 .lib-locked { overflow: hidden; }
@@ -328,7 +329,19 @@ main.lib > .lib-top, main.lib > .lib-rest { flex: none; }
   box-shadow: inset 0 0 0 1px rgba(120, 120, 126, 0.35);
 }
 .lib-art--playing .lib-disc::before { animation: lib-spin 6s linear 1.05s infinite; }
-@keyframes lib-slide { from { transform: translateX(0); } to { transform: translateX(42%); } }
+@keyframes lib-slide { from { transform: translateX(0); } to { transform: translateX(14%); } }
+/* pressing play slides the disc the rest of the way to halfway out, and it spins while the song plays */
+.lib-art--cd .lib-disc { transition: translate 0.7s cubic-bezier(0.25, 0.8, 0.25, 1); }
+.lib-art--out .lib-disc { translate: 36% 0; }
+.lib-art--out .lib-disc::before { animation: lib-spin 4s linear 0.35s infinite paused; }
+.lib-art--music .lib-disc::before { animation-play-state: running; }
+.lib-play {
+  display: inline-grid; place-items: center; width: 1.9rem; height: 1.9rem; margin-left: 0.6rem; padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 50%; background: none; color: inherit; cursor: pointer;
+  vertical-align: middle; transition: border-color 0.15s, color 0.15s;
+}
+.lib-play svg { width: 0.7rem; height: 0.7rem; fill: currentColor; }
+.lib-play:hover { color: var(--accent); border-color: var(--accent); }
 @keyframes lib-spin { to { transform: rotate(360deg); } }
 @media (min-width: 701px) { .lib-open:has(.lib-art--cd) { gap: 8.5rem; } }
 
@@ -396,8 +409,10 @@ main.lib > .lib-top, main.lib > .lib-rest { flex: none; }
 .lib-quote { font-style: italic; font-size: 0.95rem; color: rgba(0, 0, 0, 0.7); margin-bottom: 0.8rem; }
 .lib-quote[hidden] { display: none; }
 .lib-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.45rem 0; border-bottom: 1px dashed rgba(0, 0, 0, 0.15); font-size: 0.9rem; }
-.lib-row dt { color: rgba(0, 0, 0, 0.5); }
+.lib-row dt { color: rgba(0, 0, 0, 0.5); white-space: nowrap; }
 .lib-row dd { text-align: right; font-weight: 500; }
+.lib-fav { color: inherit; text-decoration: underline; text-decoration-color: rgba(0, 0, 0, 0.25); text-underline-offset: 0.2em; transition: color 0.15s, text-decoration-color 0.15s; }
+.lib-fav:hover { color: var(--accent); text-decoration-color: currentColor; }
 .lib-detail { margin-top: 1.1rem; border-top: 1.5px solid var(--accent); padding-top: 0.9rem; }
 .lib-detail[hidden] { display: none; }
 .lib-detail h4 { font-size: 0.72rem; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 0.3rem; }
@@ -427,7 +442,7 @@ main.lib > .lib-top, main.lib > .lib-rest { flex: none; }
 @media (prefers-reduced-motion: reduce) {
   .bk, .cd, .cd-body, .board, .cal, .cal .today::after, .pin, .bk::before, .cd::before, .board::before, .bk::after, .cd::after, .lib-overlay, .lib-open, .rec { transition: none; animation: none; }
   .lib-art--cd .lib-disc, .lib-disc::before { animation: none; }
-  .lib-art--cd .lib-disc { transform: translateX(42%); }
+  .lib-art--cd .lib-disc { transform: translateX(14%); transition: none; }
   .lib-heading::after { display: none; }
   .hint-call, .hint-line, .hint-head, .hint-call text { animation: none; opacity: 1; stroke-dashoffset: 0; }
 }

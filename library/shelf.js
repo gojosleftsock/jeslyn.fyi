@@ -17,13 +17,15 @@
 //   cover   -> optional. an image url. leave it out to look up the album art automatically
 //   artist, year, genre, songs ("song count"), favorite (song), rating, quote (a lyric, shown on hover),
 //   tracklist (a list of song titles, shown as bullets where books have a synopsis), thoughts, recommend
+//   favoriteLink -> optional. a link (e.g. youtube) the favorite track name opens in a new tab
+//   audio   -> optional. an mp3 (e.g. "library/audio/this-is-pateko.mp3"); adds a play button next to the favorite track
 //
 // anything you don't have, just leave out or leave as "".
 window.LIBRARY = {
   // where the "recommend a book" button sends things:
   //   web3formsKey -> a free key from web3forms.com. recommendations get emailed to you and visitors stay on the page
   //   email        -> used when there's no key: "send it" opens the visitor's email app, addressed to you
-  recommendTo: { web3formsKey: "", email: "jesnguyen910@gmail.com" },
+  recommendTo: { web3formsKey: "acf69951-366e-4e87-90df-28ea1413695f", email: "jesnguyen910@gmail.com" },
 
   // the about-me card that opens when you click the bookend at the left end of the shelf.
   // each string in text is its own paragraph.
@@ -240,6 +242,8 @@ window.LIBRARY = {
       genre: "j-pop",
       songs: 10,
       favorite: "SUMMER BUBBLES",
+      favoriteLink: "https://www.youtube.com/watch?v=M7gfG_R0HIs",
+      audio: "",
       cover: "library/photo/covers/tommy-candy-shop-sugar-me.png",
       tracklist: [
         "FAIRY DUST",
@@ -267,6 +271,8 @@ window.LIBRARY = {
       genre: "k-pop, krnb",
       songs: 7,
       favorite: "Think About You",
+      favoriteLink: "https://www.youtube.com/watch?v=HcOuoNgrhFg",
+      audio: "",
       quote: "",
       cover: "library/photo/covers/this-is-pateko.jpg",
       tracklist: [
@@ -291,7 +297,9 @@ window.LIBRARY = {
       year: 2026,
       genre: "several",
       songs: 13,
-      favorite: "",
+      favorite: "eight",
+      favoriteLink: "https://www.youtube.com/watch?v=TgOu00Mf3kI",
+      audio: "",
       quote: "",
       cover: "library/photo/covers/i-might-be-able-to-talk-about-it-more.jpg",
       tracklist: [
